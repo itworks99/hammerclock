@@ -1,0 +1,14 @@
+{
+  "name": "W40K 10th Edition",
+  "default": true,
+  "playerCount": 2,
+  "phases": [
+    "Command Phase",
+    "Movement Phase",
+    "Shooting Phase",
+    "Charge Phase",
+    "Fight Phase",
+    "End Phase"
+  ],
+  "oneTurnForAllPlayers": false
+}

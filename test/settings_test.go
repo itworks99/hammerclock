@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"hammerclock/pkg/settings"
+	"hammerclock/pkg/Options"
 )
 
 // TestLoadSettingsFile tests that the settings file can be read correctly
@@ -12,7 +12,7 @@ import (
 func TestLoadSettingsFile(t *testing.T) {
 	// First, save the current state of the file
 	fileExists := true
-	_, err := os.Stat(settings.DefaultSettingsFilename)
+	_, err := os.Stat(Options.DefaultSettingsFilename)
 	if os.IsNotExist(err) {
 		fileExists = false
 	}
@@ -20,26 +20,26 @@ func TestLoadSettingsFile(t *testing.T) {
 	// If the file exists, make a backup
 	var backupData []byte
 	if fileExists {
-		backupData, err = os.ReadFile(settings.DefaultSettingsFilename)
+		backupData, err = os.ReadFile(Options.DefaultSettingsFilename)
 		if err != nil {
 			t.Fatalf("Failed to read existing settings file: %v", err)
 		}
 	}
 
 	// Remove the settings file if it exists (for testing)
-	err = os.Remove(settings.DefaultSettingsFilename)
+	err = os.Remove(Options.DefaultSettingsFilename)
 	if err != nil && !os.IsNotExist(err) {
 		t.Fatalf("Failed to remove settings file: %v", err)
 	}
 
 	// Verify the file was removed
-	_, err = os.Stat(settings.DefaultSettingsFilename)
+	_, err = os.Stat(Options.DefaultSettingsFilename)
 	if !os.IsNotExist(err) {
 		t.Fatalf("Settings file still exists after removal")
 	}
 
 	// Call LoadSettings to test if it creates the file
-	loadedSettings := settings.LoadSettings(settings.DefaultSettingsFilename)
+	loadedSettings := Options.LoadSettings(Options.DefaultSettingsFilename)
 
 	// Check that the settings are loaded correctly
 	if loadedSettings.Name != "W40K 10th Edition" {
@@ -64,14 +64,14 @@ func TestLoadSettingsFile(t *testing.T) {
 	}
 
 	// Verify that the file was created
-	_, err = os.Stat(settings.DefaultSettingsFilename)
+	_, err = os.Stat(Options.DefaultSettingsFilename)
 	if os.IsNotExist(err) {
 		t.Errorf("Settings file was not created")
 	}
 
 	// Restore the original file if it existed
 	if fileExists {
-		err = os.WriteFile(settings.DefaultSettingsFilename, backupData, 0644)
+		err = os.WriteFile(Options.DefaultSettingsFilename, backupData, 0644)
 		if err != nil {
 			t.Fatalf("Failed to restore settings file: %v", err)
 		}
@@ -90,7 +90,7 @@ func TestLoadCustomSettingsFile(t *testing.T) {
 	}
 
 	// Load the custom settings
-	loadedSettings := settings.LoadSettings(customSettingsFile)
+	loadedSettings := Options.LoadSettings(customSettingsFile)
 
 	// Check that the settings are loaded correctly
 	if loadedSettings.Name != "Chess" {

@@ -23,8 +23,8 @@ type NextPhaseMsg struct{}
 // PrevPhaseMsg is sent when the user wants to move to the previous phase
 type PrevPhaseMsg struct{}
 
-// ShowSettingsMsg is sent when the user wants to show the settings screen
-type ShowSettingsMsg struct{}
+// ShowOptionsMsg is sent when the user wants to show the options screen
+type ShowOptionsMsg struct{}
 
 // ShowAboutMsg is sent when the user wants to show the about screen
 type ShowAboutMsg struct{}
@@ -68,8 +68,8 @@ func Update(msg Message, model Model) (Model, Command) {
 		return handleNextPhase(model)
 	case *PrevPhaseMsg:
 		return handlePrevPhase(model)
-	case *ShowSettingsMsg:
-		return handleShowSettings(model)
+	case *ShowOptionsMsg:
+		return handleShowOptions(model)
 	case *ShowAboutMsg:
 		return handleShowAbout(model)
 	case *ShowMainScreenMsg:
@@ -153,13 +153,13 @@ func handlePrevPhase(model Model) (Model, Command) {
 	return model, NoCommand
 }
 
-// handleShowSettings handles the ShowSettingsMsg
-func handleShowSettings(model Model) (Model, Command) {
-	// Toggle between main screen and settings screen
-	if model.CurrentScreen == "settings" {
+// handleShowOptions handles the ShowOptionsMsg
+func handleShowOptions(model Model) (Model, Command) {
+	// Toggle between main screen and options screen
+	if model.CurrentScreen == "options" {
 		model.CurrentScreen = "main"
 	} else {
-		model.CurrentScreen = "settings"
+		model.CurrentScreen = "options"
 	}
 
 	return model, NoCommand
@@ -209,9 +209,8 @@ func handleKeyPress(msg *KeyPressMsg, model Model) (Model, Command) {
 		return model, NoCommand
 	case tcell.KeyRune:
 		switch string(msg.Rune) {
-		case "2":
-			// Toggle settings screen
-			return handleShowSettings(model)
+		case "o", "O":
+			return handleShowOptions(model)
 		case "a", "A":
 			// Toggle about screen
 			return handleShowAbout(model)
@@ -249,7 +248,7 @@ func SetupInputCapture(app *tview.Application, msgChan chan<- Message) {
 			return nil
 		case tcell.KeyRune:
 			switch event.Rune() {
-			case '2', 'a', 'A', 's', 'S', 'p', 'P', 'b', 'B', 'q', 'Q', ' ':
+			case 'o', 'O', 'a', 'A', 's', 'S', 'p', 'P', 'b', 'B', 'q', 'Q', ' ':
 				return nil
 			}
 		}

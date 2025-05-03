@@ -2,10 +2,12 @@ package app
 
 import (
 	"fmt"
+	"github.com/mbndr/figlet4go"
 	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	_ "github.com/mbndr/figlet4go"
 	"github.com/rivo/tview"
 )
 
@@ -19,7 +21,7 @@ type View struct {
 	BottomMenu            *tview.TextView
 	StatusBar             *tview.TextView
 	ClockDisplay          *tview.TextView
-	SettingsScreen        *tview.Flex
+	OptionsScreen         *tview.Flex
 	AboutScreen           *tview.Flex
 }
 
@@ -27,6 +29,15 @@ type View struct {
 type MenuOption struct {
 	Key         string
 	Description string
+}
+
+// ClockLayout determines the clock format string based on the model's time format setting (AMPM or 24-hour).
+func ClockLayout(model *Model) string {
+	// Determine the clock layout based on the options
+	if model.Options.TimeFormat == "AMPM" {
+		return "03:04:05 PM"
+	}
+	return "15:04:05"
 }
 
 // NewView creates a new view with the given model
@@ -44,7 +55,7 @@ func NewView(model *Model) *View {
 
 	// Create top menu options
 	menuOptions := []MenuOption{
-		{Key: "2", Description: "Settings"},
+		{Key: "O", Description: "Options"},
 		{Key: "A", Description: "About"},
 	}
 
@@ -60,7 +71,7 @@ func NewView(model *Model) *View {
 	nameDisplay := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetDynamicColors(true)
-	nameDisplay.SetText("[white:black]" + model.Settings.Name + "[:-]")
+	nameDisplay.SetText("[white:black]" + model.Options.Name + "[:-]")
 	topFlex.AddItem(nameDisplay, 0, 1, false)
 
 	// Add a spacer for centering
@@ -71,7 +82,11 @@ func NewView(model *Model) *View {
 	clockDisplay := tview.NewTextView().
 		SetTextAlign(tview.AlignRight).
 		SetDynamicColors(true)
-	clockDisplay.SetText(time.Now().Format("15:04:05"))
+
+	// Set the clock format based on the model's options
+	var clockLayout = ClockLayout(model)
+
+	clockDisplay.SetText(time.Now().Format(clockLayout))
 	topFlex.AddItem(clockDisplay, 10, 0, false)
 
 	// Add the top flex container to the main layout
@@ -90,8 +105,8 @@ func NewView(model *Model) *View {
 		playerPanelsContainer.AddItem(playerPanel, 0, 1, false)
 	}
 
-	// Create settings and about screens
-	settingsScreen := createSettingsScreen(model)
+	// Create options and about screens
+	optionsScreen := createOptionsScreen(model)
 	aboutScreen := createAboutScreen(model)
 
 	// Add player panels to main layout
@@ -127,7 +142,7 @@ func NewView(model *Model) *View {
 		BottomMenu:            bottomMenu,
 		StatusBar:             statusBar,
 		ClockDisplay:          clockDisplay,
-		SettingsScreen:        settingsScreen,
+		OptionsScreen:         optionsScreen,
 		AboutScreen:           aboutScreen,
 	}
 }
@@ -145,9 +160,9 @@ func (v *View) Render(model *Model) {
 
 	// Update the screen based on the current screen
 	switch model.CurrentScreen {
-	case "settings":
+	case "options":
 		v.PlayerPanelsContainer.Clear()
-		v.PlayerPanelsContainer.AddItem(v.SettingsScreen, 0, 1, false)
+		v.PlayerPanelsContainer.AddItem(v.OptionsScreen, 0, 1, false)
 	case "about":
 		v.PlayerPanelsContainer.Clear()
 		v.PlayerPanelsContainer.AddItem(v.AboutScreen, 0, 1, false)
@@ -160,8 +175,9 @@ func (v *View) Render(model *Model) {
 }
 
 // UpdateClock updates the clock display with the current time
-func (v *View) UpdateClock() {
-	v.ClockDisplay.SetText(time.Now().Format("15:04:05"))
+func (v *View) UpdateClock(model *Model) {
+	var clockLayout = ClockLayout(model)
+	v.ClockDisplay.SetText(time.Now().Format(clockLayout))
 }
 
 // applyTviewStyles applies the color palette to tview styles
@@ -241,7 +257,7 @@ func createMenuBar(options []MenuOption) *tview.TextView {
 		item := option.Description
 
 		if i > 0 {
-			menuString.WriteString("  ")
+			menuString.WriteString("   ")
 		}
 		menuString.WriteString("[white:black]" + key + "[:-] " + item)
 	}
@@ -285,7 +301,7 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 		item := option.Description
 
 		if i > 0 {
-			menuString.WriteString("  ")
+			menuString.WriteString("   ")
 		}
 		menuString.WriteString("[white:black]" + key + "[:-] " + item)
 	}
@@ -332,54 +348,54 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 	}
 }
 
-// createSettingsScreen creates a screen that displays the current settings
-func createSettingsScreen(model *Model) *tview.Flex {
-	settingsPanel := tview.NewFlex().SetDirection(tview.FlexRow)
+// createOptionsScreen creates a screen that displays the current options
+func createOptionsScreen(model *Model) *tview.Flex {
+	optionsPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create a title
 	titleBox := tview.NewTextView().
-		SetText("Settings").
+		SetText("Options").
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
 
-	// Create content with current settings information
+	// Create content with current options information
 	contentBox := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(model.CurrentColorPalette.White).
 		SetDynamicColors(true)
 
-	// Build settings content
+	// Build options content
 	var content strings.Builder
-	content.WriteString("[::b]Current Game:[:-] " + model.Settings.Name + "\n\n")
-	content.WriteString("[::b]Player Count:[:-] " + fmt.Sprintf("%d", model.Settings.PlayerCount) + "\n\n")
+	content.WriteString("[::b]Current Game:[:-] " + model.Options.Name + "\n\n")
+	content.WriteString("[::b]Player Count:[:-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
 	content.WriteString("[::b]Players:[:-]\n")
-	for i, name := range model.Settings.PlayerNames {
+	for i, name := range model.Options.PlayerNames {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
 	}
 	content.WriteString("\n")
 	content.WriteString("[::b]Phases:[:-]\n")
-	for i, phase := range model.Settings.Phases {
+	for i, phase := range model.Options.Phases {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
 	}
 	content.WriteString("\n")
-	content.WriteString("[::b]One Turn For All Players:[:-] " + fmt.Sprintf("%t", model.Settings.OneTurnForAllPlayers) + "\n\n")
-	content.WriteString("[::b]Color Palette:[:-] " + model.Settings.ColorPalette + "\n\n")
+	content.WriteString("[::b]One Turn For All Players:[:-] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
+	content.WriteString("[::b]Color Palette:[:-] " + model.Options.ColorPalette + "\n\n")
 	content.WriteString("\nPress [::b]2[:-] to return to the main screen")
 
 	contentBox.SetText(content.String())
 
 	// Add the boxes to the panel
-	settingsPanel.AddItem(titleBox, 1, 0, false).
+	optionsPanel.AddItem(titleBox, 1, 0, false).
 		AddItem(tview.NewBox(), 1, 0, false). // Spacer
 		AddItem(contentBox, 0, 1, false)
 
 	// Set the border and background
-	settingsPanel.SetBorder(true)
-	settingsPanel.SetTitle(" Settings ")
-	settingsPanel.SetBorderColor(model.CurrentColorPalette.Cyan)
-	settingsPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
+	optionsPanel.SetBorder(true)
+	optionsPanel.SetTitle(" Options ")
+	optionsPanel.SetBorderColor(model.CurrentColorPalette.Cyan)
+	optionsPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
 
-	return settingsPanel
+	return optionsPanel
 }
 
 // createAboutScreen creates a screen that displays information about the application
@@ -392,12 +408,18 @@ func createAboutScreen(model *Model) *tview.Flex {
 		SetTextColor(model.CurrentColorPalette.White).
 		SetDynamicColors(true)
 
+	// Use figlet4go to create a fancy title
+	ascii := figlet4go.NewAsciiRender()
+	// Set the font to "slant" for a slanted style
+	options := figlet4go.NewRenderOptions()
+	options.FontName = "larry3d"
+	renderStr, _ := ascii.RenderOpts("Hammerclock", options)
+
 	// Build about content
 	var content strings.Builder
-	content.WriteString("[::b]Hammerclock v1.0.0[:-]\n\n")
-	content.WriteString("A terminal-based timer and phase tracker for tabletop games\n\n")
-	content.WriteString("Created with [::b]Go[:-] and [::b]tview[:-]\n\n")
-	content.WriteString("© 2023 Hammerclock Developers\n\n")
+	content.WriteString(renderStr)
+	content.WriteString("[::b]v0.1[:-]\n\n\n")
+	content.WriteString("A terminal-based timer and phase tracker for tabletop games\n\n\n")
 	content.WriteString("\nPress [::b]A[:-] to return to the main screen")
 
 	contentBox.SetText(content.String())
@@ -425,7 +447,7 @@ func createStatusPanel(status string, model *Model) *tview.Flex {
 		SetText(status)
 
 	// Add the text view to the panel
-	statusPanel.AddItem(statusTextView, 1, 0, false)
+	statusPanel.AddItem(statusTextView, 3, 0, false)
 
 	// Set the border and background
 	statusPanel.SetBorder(true)

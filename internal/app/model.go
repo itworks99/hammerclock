@@ -11,9 +11,9 @@ type Model struct {
 	Players             []*Player
 	Phases              []string
 	GameStatus          GameStatus
-	CurrentScreen       string // Can be "main", "settings", or "about"
+	CurrentScreen       string // Can be "main", "options", or "about"
 	GameStarted         bool
-	Settings            Settings
+	Options             Options
 	CurrentColorPalette ColorPalette
 }
 
@@ -41,8 +41,8 @@ const (
 	GamePaused     GameStatus = "Game Paused"
 )
 
-// Settings defines the configuration for a game, including player details, phases, and display preferences.
-type Settings struct {
+// Options defines the configuration for a game, including player details, phases, and display preferences.
+type Options struct {
 	Name                 string   `json:"name"`
 	Default              bool     `json:"default"`
 	PlayerCount          int      `json:"playerCount"`
@@ -50,6 +50,7 @@ type Settings struct {
 	Phases               []string `json:"phases"`
 	OneTurnForAllPlayers bool     `json:"oneTurnForAllPlayers"`
 	ColorPalette         string   `json:"colorPalette"`
+	TimeFormat           string   `json:"timeFormat"` // AMPM or 24h
 }
 
 // ColorPalette contains all the colors used in the application
@@ -100,8 +101,8 @@ var MonokaiPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(39, 40, 34),    // Background
 }
 
-// DefaultSettings Default settings
-var DefaultSettings = Settings{
+// DefaultOptions Default options
+var DefaultOptions = Options{
 	Name:                 "W40K 10th Edition",
 	Default:              true,
 	PlayerCount:          2,
@@ -109,17 +110,18 @@ var DefaultSettings = Settings{
 	Phases:               []string{"Command Phase", "Movement Phase", "Shooting Phase", "Charge Phase", "Fight Phase", "End Phase"},
 	OneTurnForAllPlayers: false,
 	ColorPalette:         "k9s",
+	TimeFormat:           "AMPM",
 }
 
 // NewModel creates a new model with default values
 func NewModel() Model {
-	// Initialize with default settings
-	settings := DefaultSettings
+	// Initialize with default options
+	options := DefaultOptions
 
 	// Create players
-	players := make([]*Player, settings.PlayerCount)
-	for i := 0; i < settings.PlayerCount; i++ {
-		playerName := settings.PlayerNames[i]
+	players := make([]*Player, options.PlayerCount)
+	for i := 0; i < options.PlayerCount; i++ {
+		playerName := options.PlayerNames[i]
 		players[i] = &Player{
 			Name:         playerName,
 			TimeElapsed:  0,
@@ -130,11 +132,11 @@ func NewModel() Model {
 
 	return Model{
 		Players:             players,
-		Phases:              settings.Phases,
+		Phases:              options.Phases,
 		GameStatus:          GameNotStarted,
 		CurrentScreen:       "main",
 		GameStarted:         false,
-		Settings:            settings,
+		Options:             options,
 		CurrentColorPalette: K9sPalette,
 	}
 }

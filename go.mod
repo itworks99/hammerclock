@@ -6,6 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/gdamore/tcell/v2 v2.8.1
+	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
 	github.com/rivo/tview v0.0.0-20250501113434-0c592cd31026
 )
 

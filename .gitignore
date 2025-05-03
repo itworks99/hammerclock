@@ -22,7 +22,7 @@ vendor/**
 bin/**
 tmp/**
 
-# Air settings
+# Air Options
 .air.toml
 
 # Go workspace file

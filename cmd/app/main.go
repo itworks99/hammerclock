@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"hammerclock/internal/app"
-	"hammerclock/pkg/settings"
+	"hammerclock/pkg/Options"
 )
 
 // CLI usage information
@@ -18,37 +18,37 @@ Usage:
   hammerclock [options]
 
 Options:
-  -s <file>    Specify a custom settings file (default: defaultRules.json)
+  -o <file>    Specify a custom options file (default: defaultRules.json)
   -h, --help   Show this help message
 
 Examples:
-  hammerclock                     # Run with default settings
-  hammerclock -s mySettings.json # Run with custom settings
+  hammerclock                     # Run with default options
+  hammerclock -o myOptions.json # Run with custom options
 `
 
 func main() {
 	// Parse command line flags
-	settingsFileFlag := flag.String("s", "defaultRules.json", "Path to the settings file")
+	optionsFileFlag := flag.String("o", "defaultRules.json", "Path to the options file")
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, cliUsage)
 	}
 	flag.Parse()
 
-	// Load settings from file
-	settings := settings.LoadSettings(*settingsFileFlag)
+	// Load options from file
+	options := Options.LoadOptions(*optionsFileFlag)
 
 	// Create the model
 	model := app.NewModel()
-	model.Settings = settings
-	model.Phases = settings.Phases
-	model.CurrentColorPalette = app.GetColorPaletteByName(settings.ColorPalette)
+	model.Options = options
+	model.Phases = options.Phases
+	model.CurrentColorPalette = app.GetColorPaletteByName(options.ColorPalette)
 
-	// Create players based on settings
-	players := make([]*app.Player, settings.PlayerCount)
-	for i := 0; i < settings.PlayerCount; i++ {
+	// Create players based on options
+	players := make([]*app.Player, options.PlayerCount)
+	for i := 0; i < options.PlayerCount; i++ {
 		playerName := fmt.Sprintf("Player %d", i+1) // Default name as fallback
-		if i < len(settings.PlayerNames) {
-			playerName = settings.PlayerNames[i]
+		if i < len(options.PlayerNames) {
+			playerName = options.PlayerNames[i]
 		}
 		players[i] = &app.Player{
 			Name:         playerName,
@@ -79,7 +79,7 @@ func main() {
 			case <-ticker.C:
 				// Update the clock display
 				view.App.QueueUpdateDraw(func() {
-					view.UpdateClock()
+					view.UpdateClock(&model)
 				})
 
 				// Send a tick message

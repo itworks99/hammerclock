@@ -15,5 +15,6 @@
     "End Phase"
   ],
   "oneTurnForAllPlayers": false,
-  "colorPalette": "k9s"
+  "colorPalette": "k9s",
+  "timeFormat": "AMPM"
 }

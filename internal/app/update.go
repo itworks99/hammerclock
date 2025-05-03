@@ -49,14 +49,6 @@ func NoCommand() Message {
 	return nil
 }
 
-// TickCommand returns a command that sends a TickMsg after a delay
-func TickCommand() Command {
-	return func() Message {
-		time.Sleep(1 * time.Second)
-		return &TickMsg{}
-	}
-}
-
 // Update processes a message and returns an updated model and a command to execute
 func Update(msg Message, model Model) (Model, Command) {
 	switch msg := msg.(type) {

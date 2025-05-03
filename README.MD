@@ -1,9 +1,9 @@
 # Hammerclock
 
 A simple terminal-based [chess clock](https://en.wikipedia.org/wiki/Chess_clock) and phase tracker for tabletop games. It is made with Warhammer40k/Age of Sigmar type of games in mind, but it can be used for any game that requires a timer and phase tracking.
+<img alt="Hammerclock Screenshot" src="img.png" width="600"/>
 
 # Running
-
 By default the application searches for the options file in the current directory. You can specify a different configuration file by using the `-c` flag.
 
 ```bash

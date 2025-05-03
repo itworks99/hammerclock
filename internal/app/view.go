@@ -19,7 +19,7 @@ type View struct {
 	PlayerPanels          []*tview.Flex
 	TopMenu               *tview.TextView
 	BottomMenu            *tview.TextView
-	StatusBar             *tview.TextView
+	StatusPanel           *tview.Flex
 	ClockDisplay          *tview.TextView
 	OptionsScreen         *tview.Flex
 	AboutScreen           *tview.Flex
@@ -78,7 +78,7 @@ func NewView(model *Model) *View {
 	rightSpacer := tview.NewBox()
 	topFlex.AddItem(rightSpacer, 0, 1, false)
 
-	// Add clock display to the right side
+	// Add a clock display to the right side
 	clockDisplay := tview.NewTextView().
 		SetTextAlign(tview.AlignRight).
 		SetDynamicColors(true)
@@ -114,9 +114,9 @@ func NewView(model *Model) *View {
 
 	// Create status panel
 	statusPanel := createStatusPanel(string(model.GameStatus), model)
-	// Extract the status text view for later updates
-	statusBar := statusPanel.GetItem(0).(*tview.TextView)
-	mainFlex.AddItem(statusPanel, 1, 0, false)
+
+	// Add status panels to main layout
+	mainFlex.AddItem(statusPanel, 3, 0, false)
 
 	// Create bottom menu options
 	instructions := []MenuOption{
@@ -140,7 +140,7 @@ func NewView(model *Model) *View {
 		PlayerPanels:          playerPanels,
 		TopMenu:               topMenu,
 		BottomMenu:            bottomMenu,
-		StatusBar:             statusBar,
+		StatusPanel:           statusPanel,
 		ClockDisplay:          clockDisplay,
 		OptionsScreen:         optionsScreen,
 		AboutScreen:           aboutScreen,
@@ -152,8 +152,8 @@ func (v *View) Render(model *Model) {
 	// Update player panels
 	updatePlayerPanels(model.Players, v.PlayerPanels, model)
 
-	// Update status bar
-	v.StatusBar.SetText(string(model.GameStatus))
+	// Update status panel
+	updateStatusPanel(v.StatusPanel, string(model.GameStatus), model)
 
 	// Update menu text
 	updateMenuText(v.BottomMenu, model.GameStatus)
@@ -171,6 +171,21 @@ func (v *View) Render(model *Model) {
 		for _, panel := range v.PlayerPanels {
 			v.PlayerPanelsContainer.AddItem(panel, 0, 1, false)
 		}
+	}
+}
+
+func updateStatusPanel(panel *tview.Flex, s string, model *Model) {
+	statusTextView := panel.GetItem(0).(*tview.TextView)
+	statusTextView.SetText(s)
+
+	// Set the border color based on the game status
+	switch model.GameStatus {
+	case GameNotStarted:
+		panel.SetBorderColor(model.CurrentColorPalette.Cyan)
+	case GameInProgress:
+		panel.SetBorderColor(model.CurrentColorPalette.Green)
+	case GamePaused:
+		panel.SetBorderColor(model.CurrentColorPalette.Yellow)
 	}
 }
 
@@ -354,7 +369,6 @@ func createOptionsScreen(model *Model) *tview.Flex {
 
 	// Create a title
 	titleBox := tview.NewTextView().
-		SetText("Options").
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
 
@@ -366,21 +380,22 @@ func createOptionsScreen(model *Model) *tview.Flex {
 
 	// Build options content
 	var content strings.Builder
-	content.WriteString("[::b]Current Game:[:-] " + model.Options.Name + "\n\n")
-	content.WriteString("[::b]Player Count:[:-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
-	content.WriteString("[::b]Players:[:-]\n")
+	content.WriteString(" [::b]Name of the ruleset:[:-] " + model.Options.Name + "\n\n")
+	content.WriteString(" [::b]Player Count:[:-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
+	content.WriteString(" [::b]Players:[:-]\n")
 	for i, name := range model.Options.PlayerNames {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
 	}
 	content.WriteString("\n")
-	content.WriteString("[::b]Phases:[:-]\n")
+	content.WriteString(" [::b]Phases:[:-]\n")
 	for i, phase := range model.Options.Phases {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
 	}
 	content.WriteString("\n")
-	content.WriteString("[::b]One Turn For All Players:[:-] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
-	content.WriteString("[::b]Color Palette:[:-] " + model.Options.ColorPalette + "\n\n")
-	content.WriteString("\nPress [::b]2[:-] to return to the main screen")
+	content.WriteString(" [::b]One Turn For All Players:[:-] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
+	content.WriteString(" [::b]Color Palette:[:-] " + model.Options.ColorPalette + "\n\n")
+	content.WriteString(" [::b]Time Format:[:-] " + model.Options.TimeFormat + "\n\n")
+	content.WriteString("\n Press [::b]2[:-] to return to the main screen")
 
 	contentBox.SetText(content.String())
 
@@ -447,11 +462,10 @@ func createStatusPanel(status string, model *Model) *tview.Flex {
 		SetText(status)
 
 	// Add the text view to the panel
-	statusPanel.AddItem(statusTextView, 3, 0, false)
+	statusPanel.AddItem(statusTextView, 1, 0, false)
 
 	// Set the border and background
 	statusPanel.SetBorder(true)
-	statusPanel.SetTitle(" Status ")
 	statusPanel.SetBorderColor(model.CurrentColorPalette.Cyan)
 	statusPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
 

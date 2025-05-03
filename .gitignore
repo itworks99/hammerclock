@@ -18,6 +18,13 @@
 # Dependency directories (remove the comment below to include it)
 vendor/**
 
+# Binary files
+bin/**
+tmp/**
+
+# Air settings
+.air.toml
+
 # Go workspace file
 go.work
 go.work.sum

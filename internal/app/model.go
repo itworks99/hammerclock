@@ -41,7 +41,7 @@ const (
 	GamePaused     GameStatus = "Game Paused"
 )
 
-// Settings represents the game settings
+// Settings defines the configuration for a game, including player details, phases, and display preferences.
 type Settings struct {
 	Name                 string   `json:"name"`
 	Default              bool     `json:"default"`
@@ -64,7 +64,7 @@ type ColorPalette struct {
 	Black    tcell.Color
 }
 
-// K9s color palette
+// K9sPalette K9s color palette
 var K9sPalette = ColorPalette{
 	Blue:     tcell.NewRGBColor(36, 96, 146),   // Dark blue for backgrounds
 	Cyan:     tcell.NewRGBColor(0, 183, 235),   // Cyan for highlights
@@ -76,7 +76,7 @@ var K9sPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(0, 0, 0),       // Black for default backgrounds
 }
 
-// Dracula color palette
+// DraculaPalette Dracula color palette
 var DraculaPalette = ColorPalette{
 	Blue:     tcell.NewRGBColor(189, 147, 249), // Purple
 	Cyan:     tcell.NewRGBColor(139, 233, 253), // Cyan
@@ -88,7 +88,7 @@ var DraculaPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(40, 42, 54),    // Background
 }
 
-// Monokai color palette
+// MonokaiPalette Monokai color palette
 var MonokaiPalette = ColorPalette{
 	Blue:     tcell.NewRGBColor(102, 217, 239), // Blue
 	Cyan:     tcell.NewRGBColor(102, 217, 239), // Blue (same as Blue for Monokai)
@@ -100,7 +100,7 @@ var MonokaiPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(39, 40, 34),    // Background
 }
 
-// Default settings
+// DefaultSettings Default settings
 var DefaultSettings = Settings{
 	Name:                 "W40K 10th Edition",
 	Default:              true,

@@ -386,12 +386,6 @@ func createSettingsScreen(model *Model) *tview.Flex {
 func createAboutScreen(model *Model) *tview.Flex {
 	aboutPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
-	// Create a title
-	titleBox := tview.NewTextView().
-		SetText("About Hammerclock").
-		SetTextAlign(tview.AlignCenter).
-		SetTextColor(model.CurrentColorPalette.White)
-
 	// Create content with about information
 	contentBox := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
@@ -409,9 +403,8 @@ func createAboutScreen(model *Model) *tview.Flex {
 	contentBox.SetText(content.String())
 
 	// Add the boxes to the panel
-	aboutPanel.AddItem(titleBox, 1, 0, false).
-		AddItem(tview.NewBox(), 1, 0, false). // Spacer
-		AddItem(contentBox, 0, 1, false)
+	aboutPanel.AddItem(tview.NewBox(), 1, 0, false). // Spacer
+								AddItem(contentBox, 0, 1, false)
 
 	// Set the border and background
 	aboutPanel.SetBorder(true)

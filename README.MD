@@ -1,6 +1,6 @@
 # Hammerclock
 
-A simple terminal-based [chess clock](https://en.wikipedia.org/wiki/Chess_clock) and phase tracker for tabletop games. It is made with Warhammer40k/Age of Sigmar type of games in mind, but it can be used for any game that requires a timer and phase tracking.
+A simple TUI [chess clock](https://en.wikipedia.org/wiki/Chess_clock) and phase tracker app for tabletop games. It is made with Warhammer40k/Age of Sigmar type of games in mind, but it can be used for any game that requires a timer and phase tracking.
 <img alt="Hammerclock Screenshot" src="img.png" width="600"/>
 
 # Running

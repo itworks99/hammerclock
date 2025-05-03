@@ -1,0 +1,16 @@
+{
+  "name": "Chess - Monokai Theme",
+  "default": false,
+  "playerCount": 2,
+  "playerNames": [
+    "White", 
+    "Black"
+  ],
+  "phases": [
+    "Opening",
+    "Middle Game",
+    "End Game"
+  ],
+  "oneTurnForAllPlayers": false,
+  "colorPalette": "monokai"
+}

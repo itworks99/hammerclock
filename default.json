@@ -1,0 +1,91 @@
+{
+  "default": 0,
+  "rules": [
+    {
+      "name": "Warhammer 40K (10th Edition)",
+      "phases": [
+        "Command Phase",
+        "Movement Phase",
+        "Shooting Phase",
+        "Charge Phase",
+        "Fight Phase",
+        "End Phase"
+      ],
+      "oneTurnForAllPlayers": false
+    },
+    {
+      "name": "Kill Team (2021)",
+      "phases": [
+        "Initiative Phase",
+        "Movement Phase",
+        "Shooting Phase",
+        "Fight Phase",
+        "Morale Phase"
+      ],
+      "oneTurnForAllPlayers": false
+    },
+    {
+      "name": "Necromunda (2022 edition)",
+      "phases": [
+        "Recovery Phase",
+        "Action Phase",
+        "End Phase"
+      ],
+      "oneTurnForAllPlayers": false
+    },
+    {
+      "name": "Age of Sigmar (4th Edition)",
+      "phases": [
+        "Start of Turn Phase",
+        "Hero Phase",
+        "Movement Phase",
+        "Shooting Phase",
+        "Charge Phase",
+        "Combat Phase",
+        "End of Turn Phase"
+      ],
+      "oneTurnForAllPlayers": false
+    },
+    {
+      "name": "Warcry (3rd edition)",
+      "phases": [
+        "Set Up Phase",
+        "Players' Phase (activating models alternately)",
+        "End Phase"
+      ],
+      "oneTurnForAllPlayers": false
+    },
+    {
+      "name": "Blood Bowl (2020 edition)",
+      "phases": [
+        "Pre-Match Phase",
+        "Kick-Off Phase",
+        "Team Turn (both teams alternate)",
+        "End of Turn Phase",
+        "Post-Match Phase"
+      ],
+      "oneTurnForAllPlayers": false
+    },
+    {
+      "name": "Bunny Kingdom",
+      "phases": [
+        "Draft Phase (players select cards)",
+        "Build Phase (place cards on the board)",
+        "Scoring Phase (calculate points based on card placement)"
+      ],
+      "oneTurnForAllPlayers": false
+    },
+    {
+      "name": "Chess",
+      "phases": [],
+      "oneTurnForAllPlayers": true
+    }
+  ],
+  "playerCount": 2,
+  "playerNames": [
+    "Player 1",
+    "Player 2"
+  ],
+  "colorPalette": "warhammer",
+  "timeFormat": "AMPM"
+}

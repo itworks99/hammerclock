@@ -20,7 +20,7 @@ type View struct {
 	BottomMenu            *tview.TextView
 	StatusPanel           *tview.Flex
 	ClockDisplay          *tview.TextView
-	OptionsScreen         *tview.Flex
+	OptionsScreen         *tview.Grid
 	AboutScreen           *tview.Flex
 }
 
@@ -70,7 +70,7 @@ func NewView(model *Model) *View {
 	nameDisplay := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetDynamicColors(true)
-	nameDisplay.SetText("[white]" + model.Options.Name + "[-]")
+	nameDisplay.SetText("[white]" + model.Options.Rules[model.Options.Default].Name + "[-]")
 	topFlex.AddItem(nameDisplay, 0, 1, false)
 
 	// Add a spacer for centering
@@ -358,45 +358,52 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 }
 
 // createOptionsScreen creates a screen that displays the current options
-func createOptionsScreen(model *Model) *tview.Flex {
-	optionsPanel := tview.NewFlex().SetDirection(tview.FlexRow)
+func createOptionsScreen(model *Model) *tview.Grid {
+	optionsPanel := tview.NewGrid().
+		SetRows(1, 1, 0). // Title, Spacer, Content
+		SetColumns(0, 0). // Two equal columns
+		SetBorders(true)
 
-	// Create a title
-	titleBox := tview.NewTextView().
-		SetTextAlign(tview.AlignCenter).
-		SetTextColor(model.CurrentColorPalette.White)
-
-	// Create content with current options information
-	contentBox := tview.NewTextView().
+	// Create content for the left column
+	leftContentBox := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(model.CurrentColorPalette.White).
 		SetDynamicColors(true)
 
-	// Build options content
-	var content strings.Builder
-	content.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Name + "\n\n")
-	content.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
-	content.WriteString(" [b]Players:[-]\n")
-	for i, name := range model.Options.PlayerNames {
-		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
-	}
-	content.WriteString("\n")
-	content.WriteString(" [b]Phases:[-]\n")
-	for i, phase := range model.Options.Phases {
-		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
-	}
-	content.WriteString("\n")
-	content.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
-	content.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
-	content.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
-	content.WriteString("\n [b]Press [-]O[b] to return to the main screen")
+	// Create content for the right column
+	rightContentBox := tview.NewTextView().
+		SetTextAlign(tview.AlignLeft).
+		SetTextColor(model.CurrentColorPalette.White).
+		SetDynamicColors(true)
 
-	contentBox.SetText(content.String())
+	// Build options content for the left column
+	var leftContent strings.Builder
 
-	// Add the boxes to the panel
-	optionsPanel.AddItem(titleBox, 1, 0, false).
-		AddItem(tview.NewBox(), 1, 0, false). // Spacer
-		AddItem(contentBox, 0, 1, false)
+	leftContent.WriteString("\n")
+	leftContent.WriteString("\n [b]Press [-]O[b] to return to the main screen")
+	leftContentBox.SetText(leftContent.String())
+
+	// Build options content for the right column
+	var rightContent strings.Builder
+	rightContent.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Rules[model.Options.Default].Name + "\n\n")
+	rightContent.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
+	rightContent.WriteString(" [b]Players:[-]\n")
+	for i, name := range model.Players {
+		rightContent.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
+	}
+	rightContent.WriteString(" [b]Phases:[-]\n")
+	for i, phase := range model.Phases {
+		rightContent.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
+	}
+	rightContent.WriteString("\n")
+	rightContent.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.Rules[model.Options.Default].OneTurnForAllPlayers) + "\n\n")
+	rightContent.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
+	rightContent.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
+	rightContentBox.SetText(rightContent.String())
+
+	// Add items to the grid
+	optionsPanel.AddItem(leftContentBox, 2, 0, 1, 1, 0, 0, false)
+	optionsPanel.AddItem(rightContentBox, 2, 1, 1, 1, 0, 0, false)
 
 	// Set the border and background
 	optionsPanel.SetBorder(true)

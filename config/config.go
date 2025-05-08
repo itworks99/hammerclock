@@ -4,4 +4,4 @@ package hammerclockConfig
 const GitHubUrl = "https://github.com/itworks99/hammerclock"
 
 // DefaultOptionsFilename is the default filename for the options file
-const DefaultOptionsFilename = "defaultRules.json"
+const DefaultOptionsFilename = "default.json"

@@ -39,7 +39,7 @@ func main() {
 	// Create the model
 	model := app.NewModel()
 	model.Options = options
-	model.Phases = options.Phases
+	model.Phases = options.Rules[options.Default].Phases
 	model.CurrentColorPalette = app.GetColorPaletteByName(options.ColorPalette)
 
 	// Create players based on options

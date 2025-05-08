@@ -15,7 +15,7 @@ By default the application searches for the options file in the current director
 The configuration file is a JSON file that contains the following fields:
 ```json
 {
-"name": "W40K 10th Edition",
+"name": "Wh40K 10th Edition",
 "default": true,
 "playerCount": 2,
 "playerNames": [

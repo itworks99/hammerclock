@@ -43,14 +43,20 @@ const (
 
 // Options defines the configuration for a game, including player details, phases, and display preferences.
 type Options struct {
+	Default      int      `json:"default"`
+	Rules        []Rules  `json:"rules"`
+	PlayerCount  int      `json:"playerCount"`
+	PlayerNames  []string `json:"playerNames"`
+	ColorPalette string   `json:"colorPalette"`
+	TimeFormat   string   `json:"timeFormat"` // AMPM or 24h
+}
+
+// Rules defines the rules for a specific game, including the name, phases, and whether players are only taking
+// one turn (in that case, phases are being ignored).
+type Rules struct {
 	Name                 string   `json:"name"`
-	Default              bool     `json:"default"`
-	PlayerCount          int      `json:"playerCount"`
-	PlayerNames          []string `json:"playerNames"`
 	Phases               []string `json:"phases"`
 	OneTurnForAllPlayers bool     `json:"oneTurnForAllPlayers"`
-	ColorPalette         string   `json:"colorPalette"`
-	TimeFormat           string   `json:"timeFormat"` // AMPM or 24h
 }
 
 // ColorPalette contains all the colors used in the application
@@ -127,14 +133,82 @@ var KillTeamPalette = ColorPalette{
 
 // DefaultOptions Default options
 var DefaultOptions = Options{
-	Name:                 "WH40K 10th Edition",
-	Default:              true,
-	PlayerCount:          2,
-	PlayerNames:          []string{"Player 1", "Player 2"},
+	Default:      0,
+	Rules:        allRules,
+	PlayerCount:  2,
+	PlayerNames:  []string{"Player 1", "Player 2"},
+	ColorPalette: "warhammer",
+	TimeFormat:   "AMPM",
+}
+
+// allRules contains all the rules available in the application
+var allRules = []Rules{
+	WarhammerRules,
+	KillTeamRules,
+	NecromundaRules,
+	AgeOfSigmarRules,
+	WarcryRules,
+	BloodBowlRules,
+	BunnyKingdomRules,
+	ChessRules,
+}
+
+// WarhammerRules Warhammer rules
+var WarhammerRules = Rules{
+	Name:                 "Warhammer 40K (10th Edition)",
 	Phases:               []string{"Command Phase", "Movement Phase", "Shooting Phase", "Charge Phase", "Fight Phase", "End Phase"},
 	OneTurnForAllPlayers: false,
-	ColorPalette:         "warhammer",
-	TimeFormat:           "AMPM",
+}
+
+// KillTeamRules Kill Team options
+var KillTeamRules = Rules{
+	Name:                 "Kill Team (2021)",
+	Phases:               []string{"Initiative Phase", "Movement Phase", "Shooting Phase", "Fight Phase", "Morale Phase"},
+	OneTurnForAllPlayers: false,
+}
+
+// NecromundaRules Necromunda options
+var NecromundaRules = Rules{
+	Name:                 "Necromunda (2022 edition)",
+	Phases:               []string{"Recovery Phase", "Action Phase", "End Phase"},
+	OneTurnForAllPlayers: false,
+}
+
+// AgeOfSigmarRules Age of Sigmar options
+var AgeOfSigmarRules = Rules{
+	Name:                 "Age of Sigmar (4th Edition)",
+	Phases:               []string{"Start of Turn Phase", "Hero Phase", "Movement Phase", "Shooting Phase", "Charge Phase", "Combat Phase", "End of Turn Phase"},
+	OneTurnForAllPlayers: false,
+}
+
+// WarcryRules Warcry options
+var WarcryRules = Rules{
+	Name:                 "Warcry (3rd edition)",
+	Phases:               []string{"Set Up Phase", "Players' Phase (activating models alternately)", "End Phase"},
+	OneTurnForAllPlayers: false,
+}
+
+// BloodBowlRules Blood Bowl options
+var BloodBowlRules = Rules{
+	Name:                 "Blood Bowl (2020 edition)",
+	Phases:               []string{"Pre-Match Phase", "Kick-Off Phase", "Team Turn (both teams alternate)", "End of Turn Phase", "Post-Match Phase"},
+	OneTurnForAllPlayers: false,
+}
+
+// BunnyKingdomRules Bunny Kingdom options
+var BunnyKingdomRules = Rules{
+	Name: "Bunny Kingdom",
+	Phases: []string{"Draft Phase (players select cards)",
+		"Build Phase (place cards on the board)",
+		"Scoring Phase (calculate points based on card placement)"},
+	OneTurnForAllPlayers: false,
+}
+
+// ChessRules Chess options
+var ChessRules = Rules{
+	Name:                 "Chess",
+	Phases:               []string{},
+	OneTurnForAllPlayers: true,
 }
 
 // NewModel creates a new model with default values
@@ -156,12 +230,23 @@ func NewModel() Model {
 
 	return Model{
 		Players:             players,
-		Phases:              options.Phases,
+		Phases:              options.Rules[options.Default].Phases,
 		GameStatus:          GameNotStarted,
 		CurrentScreen:       "main",
 		GameStarted:         false,
 		Options:             options,
 		CurrentColorPalette: K9sPalette,
+	}
+}
+
+// GetColorPalettes returns a list of available color palettes
+func GetColorPalettes() []string {
+	return []string{
+		"k9s",
+		"dracula",
+		"monokai",
+		"warhammer",
+		"killteam",
 	}
 }
 

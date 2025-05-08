@@ -3,11 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"hammerclock/components"
+	"hammerclock/internal/app"
 	"os"
 	"time"
-
-	"hammerclock/internal/app"
-	"hammerclock/pkg/Options"
 )
 
 // CLI usage information
@@ -17,13 +16,13 @@ Hammerclock - A terminal-based timer and phase tracker for tabletop games
 Usage:
   hammerclock [options]
 
-Options:
+options:
   -o <file>    Specify a custom options file (default: defaultRules.json)
   -h, --help   Show this help message
 
 Examples:
   hammerclock                     # Run with default options
-  hammerclock -o myOptions.json # Run with custom options
+  hammerclock -o myOptions.json   # Run with custom options
 `
 
 func main() {
@@ -35,7 +34,7 @@ func main() {
 	flag.Parse()
 
 	// Load options from file
-	options := Options.LoadOptions(*optionsFileFlag)
+	options := components.LoadOptions(*optionsFileFlag)
 
 	// Create the model
 	model := app.NewModel()

@@ -2,12 +2,10 @@ package app
 
 import (
 	"fmt"
-	"github.com/mbndr/figlet4go"
+	"hammerclock/internal/app/about"
 	"strings"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	_ "github.com/mbndr/figlet4go"
 	"github.com/rivo/tview"
 )
 
@@ -55,11 +53,11 @@ func NewView(model *Model) *View {
 
 	// Create top menu options
 	menuOptions := []MenuOption{
-		{Key: "O", Description: "Options"},
+		{Key: "O", Description: "options"},
 		{Key: "A", Description: "About"},
 	}
 
-	// Add top menu to the left side
+	// Add a top menu to the left side
 	topMenu := createMenuBar(menuOptions)
 	topFlex.AddItem(topMenu, 0, 1, false)
 
@@ -107,15 +105,15 @@ func NewView(model *Model) *View {
 
 	// Create options and about screens
 	optionsScreen := createOptionsScreen(model)
-	aboutScreen := createAboutScreen(model)
+	aboutScreen := about.CreateAboutScreen(model.CurrentColorPalette.White)
 
-	// Add player panels to main layout
+	// Add player panels to the main layout
 	mainFlex.AddItem(playerPanelsContainer, 0, 1, false)
 
 	// Create status panel
 	statusPanel := createStatusPanel(string(model.GameStatus), model)
 
-	// Add status panels to main layout
+	// Add status panels to the main layout
 	mainFlex.AddItem(statusPanel, 3, 0, false)
 
 	// Create bottom menu options
@@ -127,9 +125,9 @@ func NewView(model *Model) *View {
 		{Key: "Q", Description: "Quit"},
 	}
 
-	// Add bottom menu
+	// Add a bottom menu
 	bottomMenu := createMenuBar(instructions)
-	// Initialize menu text based on initial game status
+	// Initialize menu text based on the initial game status
 	updateMenuText(bottomMenu, model.GameStatus)
 	mainFlex.AddItem(bottomMenu, 1, 0, false)
 
@@ -174,6 +172,7 @@ func (v *View) Render(model *Model) {
 	}
 }
 
+// UpdateStatusPanel updates the status panel with the current game status
 func updateStatusPanel(panel *tview.Flex, s string, model *Model) {
 	statusTextView := panel.GetItem(0).(*tview.TextView)
 	statusTextView.SetText(s)
@@ -262,29 +261,27 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 
 // createMenuBar creates a menu bar with the given options
 func createMenuBar(options []MenuOption) *tview.TextView {
-	menuText := tview.NewTextView().
-		SetTextAlign(tview.AlignLeft).
-		SetDynamicColors(true)
-
+	menuText := tview.NewTextView()
 	var menuString strings.Builder
-	for i, option := range options {
-		key := option.Key
-		item := option.Description
 
+	for i, option := range options {
 		if i > 0 {
 			menuString.WriteString("   ")
 		}
-		menuString.WriteString("[white:black]" + key + "[:-] " + item)
+		menuString.WriteString(formatMenuOption(option))
 	}
 
 	menuText.SetText(menuString.String())
 	return menuText
 }
 
+// formatMenuOption formats a single menu option for display in the menu bar.
+func formatMenuOption(option MenuOption) string {
+	return "[white:black]" + option.Key + "[:-] " + option.Description
+}
+
 // updateMenuText updates the menu text based on the game state
 func updateMenuText(menu *tview.TextView, status GameStatus) {
-	var updatedInstructions []MenuOption
-
 	// Define the instructions
 	instructions := []MenuOption{
 		{Key: "S", Description: "Start Game"},
@@ -294,31 +291,25 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 		{Key: "Q", Description: "Quit"},
 	}
 
-	// Copy the instructions and update the description for the "S" key
-	for _, instruction := range instructions {
-		if instruction.Key == "S" {
-			// Update description based on game status
-			if status == GameInProgress {
-				instruction.Description = "Pause Game"
-			} else if status == GamePaused {
-				instruction.Description = "Resume Game"
-			} else {
-				instruction.Description = "Start Game"
+	// Update the description for the "S" key based on the game status
+	for i := range instructions {
+		if instructions[i].Key == "S" {
+			switch status {
+			case GameInProgress:
+				instructions[i].Description = "Pause Game"
+			case GamePaused:
+				instructions[i].Description = "Resume Game"
 			}
 		}
-		updatedInstructions = append(updatedInstructions, instruction)
 	}
 
-	// Rebuild the menu text
+	// Build the menu text
 	var menuString strings.Builder
-	for i, option := range updatedInstructions {
-		key := option.Key
-		item := option.Description
-
+	for i, option := range instructions {
 		if i > 0 {
 			menuString.WriteString("   ")
 		}
-		menuString.WriteString("[white:black]" + key + "[:-] " + item)
+		menuString.WriteString("[white:black]" + option.Key + "[:-] " + option.Description)
 	}
 
 	menu.SetText(menuString.String())
@@ -340,7 +331,7 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 
 		// Update title and text color based on game state and turn
 		if !model.GameStarted {
-			// If game hasn't started, all panels have dimmed text
+			// If the game hasn't started, all panels have dimmed text
 			playerPanels[i].SetTitle("")
 			nameBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			timeBox.SetTextColor(model.CurrentColorPalette.DimWhite)
@@ -353,7 +344,7 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 			timeBox.SetTextColor(model.CurrentColorPalette.White)
 			phaseBox.SetTextColor(model.CurrentColorPalette.White)
 		} else {
-			// Game started but it's not this player's turn
+			// Game started, but it's not this player's turn
 			playerPanels[i].SetTitle("")
 			// Use dimmed white for inactive players
 			nameBox.SetTextColor(model.CurrentColorPalette.DimWhite)
@@ -395,7 +386,7 @@ func createOptionsScreen(model *Model) *tview.Flex {
 	content.WriteString(" [::b]One Turn For All Players:[:-] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
 	content.WriteString(" [::b]Color Palette:[:-] " + model.Options.ColorPalette + "\n\n")
 	content.WriteString(" [::b]Time Format:[:-] " + model.Options.TimeFormat + "\n\n")
-	content.WriteString("\n Press [::b]2[:-] to return to the main screen")
+	content.WriteString("\n Press [::b]O[:-] to return to the main screen")
 
 	contentBox.SetText(content.String())
 
@@ -406,50 +397,11 @@ func createOptionsScreen(model *Model) *tview.Flex {
 
 	// Set the border and background
 	optionsPanel.SetBorder(true)
-	optionsPanel.SetTitle(" Options ")
+	optionsPanel.SetTitle(" options ")
 	optionsPanel.SetBorderColor(model.CurrentColorPalette.Cyan)
 	optionsPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
 
 	return optionsPanel
-}
-
-// createAboutScreen creates a screen that displays information about the application
-func createAboutScreen(model *Model) *tview.Flex {
-	aboutPanel := tview.NewFlex().SetDirection(tview.FlexRow)
-
-	// Create content with about information
-	contentBox := tview.NewTextView().
-		SetTextAlign(tview.AlignCenter).
-		SetTextColor(model.CurrentColorPalette.White).
-		SetDynamicColors(true)
-
-	// Use figlet4go to create a fancy title
-	ascii := figlet4go.NewAsciiRender()
-	// Set the font to "slant" for a slanted style
-	options := figlet4go.NewRenderOptions()
-	options.FontName = "larry3d"
-	renderStr, _ := ascii.RenderOpts("Hammerclock", options)
-
-	// Build about content
-	var content strings.Builder
-	content.WriteString(renderStr)
-	content.WriteString("[::b]v0.1[:-]\n\n\n")
-	content.WriteString("A terminal-based timer and phase tracker for tabletop games\n\n\n")
-	content.WriteString("\nPress [::b]A[:-] to return to the main screen")
-
-	contentBox.SetText(content.String())
-
-	// Add the boxes to the panel
-	aboutPanel.AddItem(tview.NewBox(), 1, 0, false). // Spacer
-								AddItem(contentBox, 0, 1, false)
-
-	// Set the border and background
-	aboutPanel.SetBorder(true)
-	aboutPanel.SetTitle(" About ")
-	aboutPanel.SetBorderColor(tcell.ColorYellow)
-	aboutPanel.SetBackgroundColor(tcell.ColorBlack)
-
-	return aboutPanel
 }
 
 // createStatusPanel creates a panel that displays the game status

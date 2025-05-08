@@ -101,15 +101,39 @@ var MonokaiPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(39, 40, 34),    // Background
 }
 
+// WarhammerPalette represents the color theme for Warhammer 40K
+var WarhammerPalette = ColorPalette{
+	Blue:     tcell.NewRGBColor(38, 57, 132),   // Ultramarine Blue
+	Cyan:     tcell.NewRGBColor(23, 155, 215),  // Tyranid Blue
+	White:    tcell.NewRGBColor(255, 250, 240), // Imperial White
+	DimWhite: tcell.NewRGBColor(180, 170, 150), // Bone Color
+	Yellow:   tcell.NewRGBColor(245, 180, 26),  // Imperial Gold
+	Green:    tcell.NewRGBColor(0, 120, 50),    // Dark Angels Green
+	Red:      tcell.NewRGBColor(190, 0, 0),     // Blood Angels Red
+	Black:    tcell.NewRGBColor(10, 10, 10),    // Abaddon Black
+}
+
+// KillTeamPalette represents the color theme for Kill Team
+var KillTeamPalette = ColorPalette{
+	Blue:     tcell.NewRGBColor(63, 81, 153),   // Night Lords Blue
+	Cyan:     tcell.NewRGBColor(0, 169, 157),   // Tactical Turquoise
+	White:    tcell.NewRGBColor(230, 230, 230), // Tactical White
+	DimWhite: tcell.NewRGBColor(150, 150, 150), // Urban Gray
+	Yellow:   tcell.NewRGBColor(255, 193, 0),   // Warning Yellow
+	Green:    tcell.NewRGBColor(76, 99, 25),    // Camo Green
+	Red:      tcell.NewRGBColor(200, 40, 40),   // Target Red
+	Black:    tcell.NewRGBColor(5, 5, 5),       // Shadow Black
+}
+
 // DefaultOptions Default options
 var DefaultOptions = Options{
-	Name:                 "W40K 10th Edition",
+	Name:                 "WH40K 10th Edition",
 	Default:              true,
 	PlayerCount:          2,
 	PlayerNames:          []string{"Player 1", "Player 2"},
 	Phases:               []string{"Command Phase", "Movement Phase", "Shooting Phase", "Charge Phase", "Fight Phase", "End Phase"},
 	OneTurnForAllPlayers: false,
-	ColorPalette:         "k9s",
+	ColorPalette:         "warhammer",
 	TimeFormat:           "AMPM",
 }
 
@@ -148,6 +172,10 @@ func GetColorPaletteByName(name string) ColorPalette {
 		return DraculaPalette
 	case "monokai":
 		return MonokaiPalette
+	case "warhammer":
+		return WarhammerPalette
+	case "killteam":
+		return KillTeamPalette
 	default: // "k9s" or any other value defaults to k9s
 		return K9sPalette
 	}

@@ -1,5 +1,5 @@
 {
-  "name": "W40K 10th Edition",
+  "name": "WH40K 10th Edition",
   "default": true,
   "playerCount": 2,
   "playerNames": [
@@ -15,6 +15,6 @@
     "End Phase"
   ],
   "oneTurnForAllPlayers": false,
-  "colorPalette": "k9s",
+  "colorPalette": "warhammer",
   "timeFormat": "AMPM"
 }

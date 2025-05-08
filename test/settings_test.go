@@ -1,10 +1,10 @@
 package test
 
 import (
+	"hammerclock/components"
+	"hammerclock/config"
 	"os"
 	"testing"
-
-	"hammerclock/pkg/Options"
 )
 
 // TestLoadOptionsFile tests that the settings file can be read correctly
@@ -12,7 +12,7 @@ import (
 func TestLoadOptionsFile(t *testing.T) {
 	// First, save the current state of the file
 	fileExists := true
-	_, err := os.Stat(Options.DefaultOptionsFilename)
+	_, err := os.Stat(hammerclockConfig.DefaultOptionsFilename)
 	if os.IsNotExist(err) {
 		fileExists = false
 	}
@@ -20,26 +20,26 @@ func TestLoadOptionsFile(t *testing.T) {
 	// If the file exists, make a backup
 	var backupData []byte
 	if fileExists {
-		backupData, err = os.ReadFile(Options.DefaultOptionsFilename)
+		backupData, err = os.ReadFile(hammerclockConfig.DefaultOptionsFilename)
 		if err != nil {
 			t.Fatalf("Failed to read existing settings file: %v", err)
 		}
 	}
 
 	// Remove the settings file if it exists (for testing)
-	err = os.Remove(Options.DefaultOptionsFilename)
+	err = os.Remove(hammerclockConfig.DefaultOptionsFilename)
 	if err != nil && !os.IsNotExist(err) {
 		t.Fatalf("Failed to remove settings file: %v", err)
 	}
 
 	// Verify the file was removed
-	_, err = os.Stat(Options.DefaultOptionsFilename)
+	_, err = os.Stat(hammerclockConfig.DefaultOptionsFilename)
 	if !os.IsNotExist(err) {
-		t.Fatalf("Options file still exists after removal")
+		t.Fatalf("options file still exists after removal")
 	}
 
 	// Call LoadOptions to test if it creates the file
-	loadedOptions := Options.LoadOptions(Options.DefaultOptionsFilename)
+	loadedOptions := components.LoadOptions(hammerclockConfig.DefaultOptionsFilename)
 
 	// Check that the settings are loaded correctly
 	if loadedOptions.Name != "W40K 10th Edition" {
@@ -64,14 +64,14 @@ func TestLoadOptionsFile(t *testing.T) {
 	}
 
 	// Verify that the file was created
-	_, err = os.Stat(Options.DefaultOptionsFilename)
+	_, err = os.Stat(hammerclockConfig.DefaultOptionsFilename)
 	if os.IsNotExist(err) {
-		t.Errorf("Options file was not created")
+		t.Errorf("options file was not created")
 	}
 
 	// Restore the original file if it existed
 	if fileExists {
-		err = os.WriteFile(Options.DefaultOptionsFilename, backupData, 0644)
+		err = os.WriteFile(hammerclockConfig.DefaultOptionsFilename, backupData, 0644)
 		if err != nil {
 			t.Fatalf("Failed to restore settings file: %v", err)
 		}
@@ -90,7 +90,7 @@ func TestLoadCustomOptionsFile(t *testing.T) {
 	}
 
 	// Load the custom settings
-	loadedOptions := Options.LoadOptions(customOptionsFile)
+	loadedOptions := components.LoadOptions(customOptionsFile)
 
 	// Check that the settings are loaded correctly
 	if loadedOptions.Name != "Chess" {

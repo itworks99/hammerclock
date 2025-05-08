@@ -115,8 +115,8 @@ func handleSwitchTurns(model Model) (Model, Command) {
 func handleNextPhase(model Model) (Model, Command) {
 	// Move forward in the phase
 	for _, player := range model.Players {
-		if player.IsTurn {
-			player.CurrentPhase = (player.CurrentPhase + 1) % len(model.Phases)
+		if player.IsTurn && player.CurrentPhase < len(model.Phases)-1 {
+			player.CurrentPhase = player.CurrentPhase + 1
 		}
 	}
 
@@ -132,8 +132,8 @@ func handleNextPhase(model Model) (Model, Command) {
 func handlePrevPhase(model Model) (Model, Command) {
 	// Move backward in the phase
 	for _, player := range model.Players {
-		if player.IsTurn {
-			player.CurrentPhase = (player.CurrentPhase - 1 + len(model.Phases)) % len(model.Phases)
+		if player.IsTurn && player.CurrentPhase > 0 {
+			player.CurrentPhase = player.CurrentPhase - 1
 		}
 	}
 
@@ -223,6 +223,8 @@ func handleKeyPress(msg *KeyPressMsg, model Model) (Model, Command) {
 			// Switch turns
 			return handleSwitchTurns(model)
 		}
+	default:
+		// Handle other keys if needed
 	}
 
 	return model, NoCommand
@@ -243,6 +245,8 @@ func SetupInputCapture(app *tview.Application, msgChan chan<- Message) {
 			case 'o', 'O', 'a', 'A', 's', 'S', 'p', 'P', 'b', 'B', 'q', 'Q', ' ':
 				return nil
 			}
+		default:
+			// Handle other keys if needed
 		}
 		return event
 	})

@@ -4,21 +4,21 @@ This document provides guidelines and instructions for developing and maintainin
 
 You are an expert in Go, CLI applications, and MVU (Model-View-Update) architecture. Your task is to guide the development of a TUI application written in Go using the tview framework. The code must be idiomatic, modular, testable, and aligned with modern Go and MVU best practices.
 
-## 🧠 Role Expectations
+## Role Expectations
 - Enforce strict MVU separation: **Model**, **Update**, and **View** logic must remain isolated.
 - Help write idiomatic, maintainable, and testable Go code.
 - Favor **small, focused interfaces** and **explicit dependency injection**.
 - Ensure no logic leaks into rendering and no UI behavior is embedded in business logic.
 
-## 🧱 MVU Guidelines
+## MVU Guidelines
 - **Model**: Clean, plain Go struct representing app state. No methods or logic.
 - **Update**: A pure function: `Update(model, msg) → (model, cmd)`. No side effects outside `tea.Cmd`.
 - **View**: A pure function: `View(model) → string`. No state mutations or side effects.
 - Avoid tightly coupling commands to view or model logic—prefer composition and testability.
 
-## 📁 Recommended Project Structure
+## Recommended Project Structure
 
-- /cmd/app/main.go - App entry point
+- /cmd/hammerclock/main.go - App entry point
 - /internal/app/model.go - App state
 - /internal/app/update.go - Update logic
 - /internal/app/view.go - View rendering
@@ -26,7 +26,7 @@ You are an expert in Go, CLI applications, and MVU (Model-View-Update) architect
 - /test/... - Test helpers, mocks
 - /configs/... - Config loading/validation
 
-## 🧪 Development Best Practices
+## Development Best Practices
 - Keep functions small, single-purpose, and well-named.
 - Use `fmt.Errorf("context: %w", err)` for error wrapping.
 - Avoid globals. Use constructors and pass dependencies explicitly.
@@ -34,7 +34,7 @@ You are an expert in Go, CLI applications, and MVU (Model-View-Update) architect
 - Use goroutines safely: protect state using channels or sync primitives.
 - Defer and close resources properly to avoid leaks.
 
-## 🧬 Testing
+## Testing
 - Use **table-driven tests** and parallel execution (`t.Parallel()`).
 - Separate **unit**, **integration**, and **E2E** tests.
 - Mock external dependencies via interfaces.
@@ -43,23 +43,23 @@ You are an expert in Go, CLI applications, and MVU (Model-View-Update) architect
    - Unit test `Update()` logic against messages.
    - Snapshot or golden-test the `View()` output.
 
-## 📈 Observability (Optional for CLI apps)
+## Observability (Optional for CLI apps)
 - Attach trace/span data to logs if tracing is included.
 - Emit structured logs (e.g., JSON) with context identifiers if logging is needed.
 - Consider metrics for startup time, render latency, or error counts.
 
-## ⚙️ Tooling
+## Tooling
 - Use `go fmt`, `goimports`, `golangci-lint` for formatting and static analysis.
 - Prefer the Go standard library where possible; minimize third-party dependencies.
 - Use Go modules with version-locked dependencies.
 
-## 📖 Documentation & Conventions
+## Documentation & Conventions
 - Use GoDoc-style comments on exported items.
 - Maintain a concise `README.md`, `CONTRIBUTING.md`, and `ARCHITECTURE.md`.
 - Follow naming consistency across types, interfaces, and packages.
 - Structure all observable behavior for testing, readability, and maintainability.
 
-## ✅ Core Principles
+## Core Principles
 1. **Do not mix view and update logic.**
 2. **Keep models pure and update logic deterministic.**
 3. **Design for change, composability, and testability.**

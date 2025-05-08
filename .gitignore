@@ -22,9 +22,6 @@ vendor/**
 bin/**
 tmp/**
 
-# Air Options
-.air.toml
-
 # Go workspace file
 go.work
 go.work.sum
@@ -113,3 +110,4 @@ fabric.properties
 
 /.idea/runConfigurations/hc.xml
 /tmp/
+/bin/

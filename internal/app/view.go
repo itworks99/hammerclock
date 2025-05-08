@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"hammerclock/internal/app/about"
+	"hammerclock/internal/app/status"
 	"strings"
 	"time"
 
@@ -58,7 +59,7 @@ func NewView(model *Model) *View {
 	}
 
 	// Add a top menu to the left side
-	topMenu := createMenuBar(menuOptions)
+	topMenu := createMenuBar(menuOptions).SetDynamicColors(true)
 	topFlex.AddItem(topMenu, 0, 1, false)
 
 	// Add a spacer for centering
@@ -69,7 +70,7 @@ func NewView(model *Model) *View {
 	nameDisplay := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetDynamicColors(true)
-	nameDisplay.SetText("[white:black]" + model.Options.Name + "[:-]")
+	nameDisplay.SetText("[white]" + model.Options.Name + "[-]")
 	topFlex.AddItem(nameDisplay, 0, 1, false)
 
 	// Add a spacer for centering
@@ -105,13 +106,13 @@ func NewView(model *Model) *View {
 
 	// Create options and about screens
 	optionsScreen := createOptionsScreen(model)
-	aboutScreen := about.CreateAboutScreen(model.CurrentColorPalette.White)
+	aboutScreen := about.About(model.CurrentColorPalette.White)
 
 	// Add player panels to the main layout
 	mainFlex.AddItem(playerPanelsContainer, 0, 1, false)
 
 	// Create status panel
-	statusPanel := createStatusPanel(string(model.GameStatus), model)
+	statusPanel := status.Status(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
 
 	// Add status panels to the main layout
 	mainFlex.AddItem(statusPanel, 3, 0, false)
@@ -126,7 +127,7 @@ func NewView(model *Model) *View {
 	}
 
 	// Add a bottom menu
-	bottomMenu := createMenuBar(instructions)
+	bottomMenu := createMenuBar(instructions).SetDynamicColors(true)
 	// Initialize menu text based on the initial game status
 	updateMenuText(bottomMenu, model.GameStatus)
 	mainFlex.AddItem(bottomMenu, 1, 0, false)
@@ -268,7 +269,8 @@ func createMenuBar(options []MenuOption) *tview.TextView {
 		if i > 0 {
 			menuString.WriteString("   ")
 		}
-		menuString.WriteString(formatMenuOption(option))
+		var menuItem = formatMenuOption(option)
+		menuString.WriteString(menuItem)
 	}
 
 	menuText.SetText(menuString.String())
@@ -277,7 +279,8 @@ func createMenuBar(options []MenuOption) *tview.TextView {
 
 // formatMenuOption formats a single menu option for display in the menu bar.
 func formatMenuOption(option MenuOption) string {
-	return "[white:black]" + option.Key + "[:-] " + option.Description
+	menuItem := fmt.Sprintf("[white]%s[d:] %s", option.Key, option.Description)
+	return menuItem
 }
 
 // updateMenuText updates the menu text based on the game state
@@ -309,7 +312,7 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 		if i > 0 {
 			menuString.WriteString("   ")
 		}
-		menuString.WriteString("[white:black]" + option.Key + "[:-] " + option.Description)
+		menuString.WriteString("[white]" + option.Key + "[d:] " + option.Description)
 	}
 
 	menu.SetText(menuString.String())
@@ -371,22 +374,22 @@ func createOptionsScreen(model *Model) *tview.Flex {
 
 	// Build options content
 	var content strings.Builder
-	content.WriteString(" [::b]Name of the ruleset:[:-] " + model.Options.Name + "\n\n")
-	content.WriteString(" [::b]Player Count:[:-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
-	content.WriteString(" [::b]Players:[:-]\n")
+	content.WriteString(" [b]Name of the ruleset:[-b] " + model.Options.Name + "\n\n")
+	content.WriteString(" [b]Player Count:[-b] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
+	content.WriteString(" [b]Players:[-b]\n")
 	for i, name := range model.Options.PlayerNames {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
 	}
 	content.WriteString("\n")
-	content.WriteString(" [::b]Phases:[:-]\n")
+	content.WriteString(" [b]Phases:[-b]\n")
 	for i, phase := range model.Options.Phases {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
 	}
 	content.WriteString("\n")
-	content.WriteString(" [::b]One Turn For All Players:[:-] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
-	content.WriteString(" [::b]Color Palette:[:-] " + model.Options.ColorPalette + "\n\n")
-	content.WriteString(" [::b]Time Format:[:-] " + model.Options.TimeFormat + "\n\n")
-	content.WriteString("\n Press [::b]O[:-] to return to the main screen")
+	content.WriteString(" [b]One Turn For All Players:[-b] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
+	content.WriteString(" [b]Color Palette:[-b] " + model.Options.ColorPalette + "\n\n")
+	content.WriteString(" [b]Time Format:[-b] " + model.Options.TimeFormat + "\n\n")
+	content.WriteString("\n Press [white]O[:d] to return to the main screen")
 
 	contentBox.SetText(content.String())
 
@@ -402,24 +405,4 @@ func createOptionsScreen(model *Model) *tview.Flex {
 	optionsPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
 
 	return optionsPanel
-}
-
-// createStatusPanel creates a panel that displays the game status
-func createStatusPanel(status string, model *Model) *tview.Flex {
-	statusPanel := tview.NewFlex().SetDirection(tview.FlexRow)
-
-	// Create status text view
-	statusTextView := tview.NewTextView().
-		SetTextAlign(tview.AlignCenter).
-		SetText(status)
-
-	// Add the text view to the panel
-	statusPanel.AddItem(statusTextView, 1, 0, false)
-
-	// Set the border and background
-	statusPanel.SetBorder(true)
-	statusPanel.SetBorderColor(model.CurrentColorPalette.Cyan)
-	statusPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
-
-	return statusPanel
 }

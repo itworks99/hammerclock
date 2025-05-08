@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func CreateAboutScreen(mainColor tcell.Color) *tview.Flex {
+func About(mainColor tcell.Color) *tview.Flex {
 	aboutPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create content with about information
@@ -31,10 +31,10 @@ func CreateAboutScreen(mainColor tcell.Color) *tview.Flex {
 	var content strings.Builder
 
 	content.WriteString(renderStr.String() + "\n")
-	content.WriteString("[::b]v0.1[:-]\n\n")
+	content.WriteString("[d:]v0.1\n\n")
 	content.WriteString("A terminal-based timer and phase tracker for tabletop games\n\n")
 	content.WriteString(hammerclockConfig.GitHubUrl + "\n\n\n\n")
-	content.WriteString("Press [::b]A[:-] to return to the main screen")
+	content.WriteString("Press [white]A[d:] to return to the main screen")
 
 	contentBox.SetText(content.String())
 

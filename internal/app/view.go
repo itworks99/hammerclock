@@ -374,22 +374,22 @@ func createOptionsScreen(model *Model) *tview.Flex {
 
 	// Build options content
 	var content strings.Builder
-	content.WriteString(" [b]Name of the ruleset:[-b] " + model.Options.Name + "\n\n")
-	content.WriteString(" [b]Player Count:[-b] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
-	content.WriteString(" [b]Players:[-b]\n")
+	content.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Name + "\n\n")
+	content.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
+	content.WriteString(" [b]Players:[-]\n")
 	for i, name := range model.Options.PlayerNames {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
 	}
 	content.WriteString("\n")
-	content.WriteString(" [b]Phases:[-b]\n")
+	content.WriteString(" [b]Phases:[-]\n")
 	for i, phase := range model.Options.Phases {
 		content.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
 	}
 	content.WriteString("\n")
-	content.WriteString(" [b]One Turn For All Players:[-b] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
-	content.WriteString(" [b]Color Palette:[-b] " + model.Options.ColorPalette + "\n\n")
-	content.WriteString(" [b]Time Format:[-b] " + model.Options.TimeFormat + "\n\n")
-	content.WriteString("\n Press [white]O[:d] to return to the main screen")
+	content.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.OneTurnForAllPlayers) + "\n\n")
+	content.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
+	content.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
+	content.WriteString("\n [b]Press [-]O[b] to return to the main screen")
 
 	contentBox.SetText(content.String())
 

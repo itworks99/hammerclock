@@ -2,11 +2,12 @@ package app
 
 import (
 	"fmt"
-	"hammerclock/internal/app/about"
-	"hammerclock/internal/app/status"
 	"strconv"
 	"strings"
 	"time"
+
+	"hammerclock/internal/app/about"
+	"hammerclock/internal/app/status"
 
 	"github.com/rivo/tview"
 )
@@ -394,9 +395,18 @@ func createOptionsScreen(model *Model) *tview.Grid {
 	rulesetBox := tview.NewDropDown().
 		SetLabel("Select ruleset(press Enter): ").
 		SetOptions(rulesetsNames, func(option string, index int) {
+			if index < 0 || index >= len(model.Options.Rules) {
+				// Handle invalid index
+				currentRulesetContentBox.SetText("[red]Error: Invalid ruleset selection![-]")
+				return
+			}
+			// Update the model with the selected ruleset
 			model.Options.Default = index
 			model.Phases = model.Options.Rules[index].Phases
-		}).SetCurrentOption(model.Options.Default).
+			// Update the ruleset content display
+			updateRulesetContent(model, currentRulesetContentBox)
+		}).
+		SetCurrentOption(model.Options.Default).
 		SetLabelColor(model.CurrentColorPalette.White)
 
 	playerCountBox := tview.NewInputField().
@@ -488,6 +498,26 @@ func createOptionsScreen(model *Model) *tview.Grid {
 	optionsPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
 
 	return optionsPanel
+}
+
+// Create a function to update the ruleset content
+func updateRulesetContent(model *Model, textView *tview.TextView) {
+	var currentRuleset strings.Builder
+	currentRuleset.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Rules[model.Options.Default].Name + "\n\n")
+	currentRuleset.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
+	currentRuleset.WriteString(" [b]Players:[-]\n")
+	for i, name := range model.Players {
+		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
+	}
+	currentRuleset.WriteString(" [b]Phases:[-]\n")
+	for i, phase := range model.Phases {
+		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
+	}
+	currentRuleset.WriteString("\n")
+	currentRuleset.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.Rules[model.Options.Default].OneTurnForAllPlayers) + "\n\n")
+	currentRuleset.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
+	currentRuleset.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
+	textView.SetText(currentRuleset.String())
 }
 
 func boolToIndex(players bool) int {

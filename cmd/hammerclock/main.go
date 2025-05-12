@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"time"
+
 	"hammerclock/components"
 	"hammerclock/config"
 	"hammerclock/internal/app"
-	"os"
-	"time"
 )
 
 // CLI usage information

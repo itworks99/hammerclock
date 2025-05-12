@@ -8,3 +8,12 @@ const DefaultOptionsFilename = "default.json"
 
 // Version of the application
 const Version = "0.1"
+
+// DefaultColorPalette is the default color palette used in the application
+const DefaultColorPalette = "warhammer"
+
+// DefaultPlayerPrefix is the default prefix for player names
+const DefaultPlayerPrefix = "Player"
+
+// DefaultPlayerCount is the default number of players in the game
+const DefaultPlayerCount = 2

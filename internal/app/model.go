@@ -1,8 +1,10 @@
 package app
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"time"
+
+	"github.com/gdamore/tcell/v2"
+	"hammerclock/config"
 )
 
 // Model represents the entire application state
@@ -135,9 +137,9 @@ var KillTeamPalette = ColorPalette{
 var DefaultOptions = Options{
 	Default:      0,
 	Rules:        allRules,
-	PlayerCount:  2,
+	PlayerCount:  hammerclockConfig.DefaultPlayerCount,
 	PlayerNames:  []string{"Player 1", "Player 2"},
-	ColorPalette: "warhammer",
+	ColorPalette: hammerclockConfig.DefaultColorPalette,
 	TimeFormat:   "AMPM",
 }
 

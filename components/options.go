@@ -3,9 +3,10 @@ package components
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"hammerclock/config"
 	"hammerclock/internal/app"
-	"os"
 )
 
 // LoadOptions loads the options from a file

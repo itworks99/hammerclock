@@ -8,9 +8,6 @@ import (
 	"os"
 )
 
-// gitHubURL is the URL for the GitHub repository
-const gitHubURL = ""
-
 // LoadOptions loads the options from a file
 func LoadOptions(filename string) app.Options {
 	var options app.Options
@@ -27,7 +24,7 @@ func LoadOptions(filename string) app.Options {
 		// Default file doesn't exist, create it from defaultOptions
 		fmt.Println("Default options file not found, creating it")
 
-		// Convert defaultOptions to JSON
+		// Convert default options to JSON
 		jsonData, err := json.MarshalIndent(app.DefaultOptions, "", "  ")
 		if err != nil {
 			fmt.Println("Error creating default options file:", err)

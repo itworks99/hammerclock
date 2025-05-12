@@ -31,7 +31,7 @@ func About(mainColor tcell.Color) *tview.Flex {
 	var content strings.Builder
 
 	content.WriteString(renderStr.String() + "\n")
-	content.WriteString("[d:]v0.1\n\n")
+	content.WriteString("[d:]v." + hammerclockConfig.Version + "\n\n")
 	content.WriteString("A terminal-based timer and phase tracker for tabletop games\n\n")
 	content.WriteString(hammerclockConfig.GitHubUrl + "\n\n\n\n")
 	content.WriteString("Press [white]A[d:] to return to the main screen")

@@ -160,42 +160,42 @@ var WarhammerRules = Rules{
 	OneTurnForAllPlayers: false,
 }
 
-// KillTeamRules Kill Team options
+// KillTeamRules Kill Team rules
 var KillTeamRules = Rules{
 	Name:                 "Kill Team (2021)",
 	Phases:               []string{"Initiative Phase", "Movement Phase", "Shooting Phase", "Fight Phase", "Morale Phase"},
 	OneTurnForAllPlayers: false,
 }
 
-// NecromundaRules Necromunda options
+// NecromundaRules Necromunda rules
 var NecromundaRules = Rules{
 	Name:                 "Necromunda (2022 edition)",
 	Phases:               []string{"Recovery Phase", "Action Phase", "End Phase"},
 	OneTurnForAllPlayers: false,
 }
 
-// AgeOfSigmarRules Age of Sigmar options
+// AgeOfSigmarRules Age of Sigmar rules
 var AgeOfSigmarRules = Rules{
 	Name:                 "Age of Sigmar (4th Edition)",
 	Phases:               []string{"Start of Turn Phase", "Hero Phase", "Movement Phase", "Shooting Phase", "Charge Phase", "Combat Phase", "End of Turn Phase"},
 	OneTurnForAllPlayers: false,
 }
 
-// WarcryRules Warcry options
+// WarcryRules Warcry rules
 var WarcryRules = Rules{
 	Name:                 "Warcry (3rd edition)",
 	Phases:               []string{"Set Up Phase", "Players' Phase (activating models alternately)", "End Phase"},
 	OneTurnForAllPlayers: false,
 }
 
-// BloodBowlRules Blood Bowl options
+// BloodBowlRules Blood Bowl rules
 var BloodBowlRules = Rules{
 	Name:                 "Blood Bowl (2020 edition)",
 	Phases:               []string{"Pre-Match Phase", "Kick-Off Phase", "Team Turn (both teams alternate)", "End of Turn Phase", "Post-Match Phase"},
 	OneTurnForAllPlayers: false,
 }
 
-// BunnyKingdomRules Bunny Kingdom options
+// BunnyKingdomRules Bunny Kingdom rules
 var BunnyKingdomRules = Rules{
 	Name: "Bunny Kingdom",
 	Phases: []string{"Draft Phase (players select cards)",
@@ -204,7 +204,7 @@ var BunnyKingdomRules = Rules{
 	OneTurnForAllPlayers: false,
 }
 
-// ChessRules Chess options
+// ChessRules Chess rules
 var ChessRules = Rules{
 	Name:                 "Chess",
 	Phases:               []string{},

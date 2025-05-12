@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"hammerclock/components"
+	"hammerclock/config"
 	"hammerclock/internal/app"
 	"os"
 	"time"
@@ -27,7 +28,7 @@ Examples:
 
 func main() {
 	// Parse command line flags
-	optionsFileFlag := flag.String("o", "defaultRules.json", "Path to the options file")
+	optionsFileFlag := flag.String("o", hammerclockConfig.DefaultOptionsFilename, "Path to the options file")
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, cliUsage)
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hammerclock/internal/app/about"
 	"hammerclock/internal/app/status"
+	"strconv"
 	"strings"
 	"time"
 
@@ -54,7 +55,7 @@ func NewView(model *Model) *View {
 
 	// Create top menu options
 	menuOptions := []MenuOption{
-		{Key: "O", Description: "options"},
+		{Key: "O", Description: "Options"},
 		{Key: "A", Description: "About"},
 	}
 
@@ -225,12 +226,16 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
 
-	// Create a box for the current phase
 	phaseBox := tview.NewTextView().
-		SetText(fmt.Sprintf("Phase: %s", model.Phases[player.CurrentPhase])).
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
-
+	// Create a box for the current phase
+	if model.Options.Rules[model.Options.Default].OneTurnForAllPlayers != true {
+		phaseBox = tview.NewTextView().
+			SetText(fmt.Sprintf("Phase: %s", model.Phases[player.CurrentPhase])).
+			SetTextAlign(tview.AlignCenter).
+			SetTextColor(model.CurrentColorPalette.White)
+	}
 	// Add the boxes to the panel
 	panel.AddItem(nameBox, 1, 1, false).
 		AddItem(tview.NewBox(), 1, 1, false). // Spacer
@@ -330,7 +335,11 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 		timeBox.SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed))
 
 		// Update current phase
-		phaseBox.SetText(fmt.Sprintf("Phase: %s", model.Phases[player.CurrentPhase]))
+		if model.Options.Rules[model.Options.Default].OneTurnForAllPlayers != true {
+			phaseBox.SetText(fmt.Sprintf("Phase: %s", model.Phases[player.CurrentPhase]))
+		} else {
+			phaseBox.SetText("")
+		}
 
 		// Update title and text color based on game state and turn
 		if !model.GameStarted {
@@ -360,56 +369,147 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 // createOptionsScreen creates a screen that displays the current options
 func createOptionsScreen(model *Model) *tview.Grid {
 	optionsPanel := tview.NewGrid().
-		SetRows(1, 1, 0). // Title, Spacer, Content
-		SetColumns(0, 0). // Two equal columns
+		SetRows(0, 0).
+		SetColumns(0, 0).
 		SetBorders(true)
 
-	// Create content for the left column
-	leftContentBox := tview.NewTextView().
+	optionsBox := tview.NewFlex().
+		SetDirection(tview.FlexRow)
+
+	HelpContentBox := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(model.CurrentColorPalette.White).
 		SetDynamicColors(true)
 
-	// Create content for the right column
-	rightContentBox := tview.NewTextView().
+	currentRulesetContentBox := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(model.CurrentColorPalette.White).
 		SetDynamicColors(true)
 
-	// Build options content for the left column
-	var leftContent strings.Builder
+	var rulesetsNames []string
+	for _, ruleset := range model.Options.Rules {
+		rulesetsNames = append(rulesetsNames, ruleset.Name)
+	}
 
-	leftContent.WriteString("\n")
-	leftContent.WriteString("\n [b]Press [-]O[b] to return to the main screen")
-	leftContentBox.SetText(leftContent.String())
+	rulesetBox := tview.NewDropDown().
+		SetLabel("Select ruleset(press Enter): ").
+		SetOptions(rulesetsNames, func(option string, index int) {
+			model.Options.Default = index
+			model.Phases = model.Options.Rules[index].Phases
+		}).SetCurrentOption(model.Options.Default).
+		SetLabelColor(model.CurrentColorPalette.White)
 
-	// Build options content for the right column
-	var rightContent strings.Builder
-	rightContent.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Rules[model.Options.Default].Name + "\n\n")
-	rightContent.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
-	rightContent.WriteString(" [b]Players:[-]\n")
+	playerCountBox := tview.NewInputField().
+		SetLabel("Player Count: ").
+		SetText(fmt.Sprintf("%d", model.Options.PlayerCount)).
+		SetLabelColor(model.CurrentColorPalette.White).
+		SetFieldWidth(3).
+		SetChangedFunc(func(text string) {
+			count, err := strconv.Atoi(text)
+			if err == nil && count > 0 {
+				model.Options.PlayerCount = count
+			}
+		})
+
+	playerNamesBox := tview.NewInputField().
+		SetLabel("Player Names: ").
+		SetText(strings.Join(model.Options.PlayerNames, ", ")).
+		SetLabelColor(model.CurrentColorPalette.White).
+		SetFieldWidth(20).
+		SetChangedFunc(func(text string) {
+			names := strings.Split(text, ",")
+			for i := 0; i < len(names); i++ {
+				names[i] = strings.TrimSpace(names[i])
+			}
+			model.Options.PlayerNames = names
+		})
+
+	// Create a dropdown for color palettes
+	colorPalettes := GetColorPalettes()
+	colorPaletteBox := tview.NewDropDown().
+		SetLabel("Select color palette(press Enter): ").
+		SetOptions(colorPalettes, func(option string, index int) {
+			model.Options.ColorPalette = option
+			model.CurrentColorPalette = GetColorPaletteByName(option)
+		}).SetCurrentOption(GetColorPaletteIndexByName(model.Options.ColorPalette)).
+		SetLabelColor(model.CurrentColorPalette.White)
+
+	timeFormatBox := tview.NewDropDown().
+		SetLabel("Select time format(press Enter): ").
+		SetOptions([]string{"AMPM", "24-hour"}, func(option string, index int) {
+			model.Options.TimeFormat = option
+		}).SetCurrentOption(timeFormatToIndex(model.Options.TimeFormat)).
+		SetLabelColor(model.CurrentColorPalette.White)
+
+	oneTurnForAllPlayersBox := tview.NewDropDown().
+		SetLabel("One Turn For All Players(press Enter): ").
+		SetOptions([]string{"true", "false"}, func(option string, index int) {
+			model.Options.Rules[model.Options.Default].OneTurnForAllPlayers = index == 0
+		}).SetCurrentOption(boolToIndex(model.Options.Rules[model.Options.Default].OneTurnForAllPlayers)).
+		SetLabelColor(model.CurrentColorPalette.White)
+
+	optionsBox.AddItem(rulesetBox, 0, 1, false).
+		AddItem(playerCountBox, 0, 1, false).
+		AddItem(playerNamesBox, 0, 1, false).
+		AddItem(colorPaletteBox, 0, 1, false).
+		AddItem(timeFormatBox, 0, 1, false).
+		AddItem(oneTurnForAllPlayersBox, 0, 1, false)
+
+	optionsPanel.AddItem(optionsBox, 0, 0, 1, 2, 0, 0, false)
+
+	var HelpContent strings.Builder
+	HelpContent.WriteString("\n")
+	HelpContent.WriteString("\n [b]Press [-]O[b] to return to the main screen")
+	HelpContentBox.SetText(HelpContent.String())
+
+	var currentRuleset strings.Builder
+	currentRuleset.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Rules[model.Options.Default].Name + "\n\n")
+	currentRuleset.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
+	currentRuleset.WriteString(" [b]Players:[-]\n")
 	for i, name := range model.Players {
-		rightContent.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
+		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
 	}
-	rightContent.WriteString(" [b]Phases:[-]\n")
+	currentRuleset.WriteString(" [b]Phases:[-]\n")
 	for i, phase := range model.Phases {
-		rightContent.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
+		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
 	}
-	rightContent.WriteString("\n")
-	rightContent.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.Rules[model.Options.Default].OneTurnForAllPlayers) + "\n\n")
-	rightContent.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
-	rightContent.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
-	rightContentBox.SetText(rightContent.String())
+	currentRuleset.WriteString("\n")
+	currentRuleset.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.Rules[model.Options.Default].OneTurnForAllPlayers) + "\n\n")
+	currentRuleset.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
+	currentRuleset.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
+	currentRulesetContentBox.SetText(currentRuleset.String())
 
-	// Add items to the grid
-	optionsPanel.AddItem(leftContentBox, 2, 0, 1, 1, 0, 0, false)
-	optionsPanel.AddItem(rightContentBox, 2, 1, 1, 1, 0, 0, false)
+	optionsPanel.AddItem(currentRulesetContentBox, 1, 0, 3, 2, 0, 0, false)
+	optionsPanel.AddItem(HelpContentBox, 4, 0, 1, 2, 0, 0, false)
 
-	// Set the border and background
 	optionsPanel.SetBorder(true)
 	optionsPanel.SetTitle(" options ")
 	optionsPanel.SetBorderColor(model.CurrentColorPalette.Cyan)
 	optionsPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
 
 	return optionsPanel
+}
+
+func boolToIndex(players bool) int {
+	if players {
+		return 0 // true
+	}
+	return 1 // false
+
+}
+
+func timeFormatToIndex(format string) int {
+	if format == "AMPM" {
+		return 0
+	}
+	return 1 // Default to 24-hour format
+}
+
+func GetColorPaletteIndexByName(palette string) int {
+	for i, name := range GetColorPalettes() {
+		if name == palette {
+			return i
+		}
+	}
+	return 0 // Default to the first palette if not found
 }

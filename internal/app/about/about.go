@@ -1,12 +1,13 @@
 package about
 
 import (
+	"io"
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/rivo/tview"
 	"hammerclock/config"
-	"io"
-	"strings"
 )
 
 func About(mainColor tcell.Color) *tview.Flex {

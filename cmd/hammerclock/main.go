@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"hammerclock/components"
-	"hammerclock/config"
+	hammerclockConfig "hammerclock/config"
 	"hammerclock/internal/app"
 )
 
@@ -70,12 +70,12 @@ func main() {
 	}
 	model.Players = players
 
-	// Create the view
-	view := app.NewView(&model)
-
 	// Set up message channel for communication between components
 	msgChan := make(chan app.Message)
 	done := make(chan struct{})
+
+	// Create the view
+	view := app.NewView(&model, msgChan)
 
 	// Set up input capture to send key press messages
 	app.SetupInputCapture(view.App, msgChan)

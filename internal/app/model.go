@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	hammerclockConfig "hammerclock/config"
+
 	"github.com/gdamore/tcell/v2"
-	"hammerclock/config"
 )
 
 // Model represents the entire application state

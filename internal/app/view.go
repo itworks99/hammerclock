@@ -27,6 +27,8 @@ type View struct {
 	ClockDisplay          *tview.TextView
 	OptionsScreen         *tview.Grid
 	AboutScreen           *tview.Flex
+	// Message channel for sending messages to the update function
+	MessageChan chan<- Message
 }
 
 // MenuOption represents a menu option with a key and description
@@ -36,7 +38,7 @@ type MenuOption struct {
 }
 
 // NewView creates a new view with the given model
-func NewView(model *Model) *View {
+func NewView(model *Model, msgChan chan<- Message) *View {
 	app := tview.NewApplication()
 
 	// Apply the current color palette to tview styles
@@ -94,7 +96,7 @@ func NewView(model *Model) *View {
 	}
 
 	// Create options and about screens
-	optionsScreen := createOptionsScreen(model)
+	optionsScreen := createOptionsScreen(model, msgChan)
 	aboutScreen := about.About(model.CurrentColorPalette.White)
 
 	// Add player panels to the main layout
@@ -132,6 +134,7 @@ func NewView(model *Model) *View {
 		ClockDisplay:          hClock,
 		OptionsScreen:         optionsScreen,
 		AboutScreen:           aboutScreen,
+		MessageChan:           msgChan,
 	}
 }
 
@@ -205,7 +208,7 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 
 	// Create upper cell flex that will contain player name, time, and phase
 	upperCell := tview.NewFlex().SetDirection(tview.FlexRow)
-	
+
 	// Create a box for the player name
 	nameBox := tview.NewTextView().
 		SetText("Player: " + player.Name).
@@ -216,35 +219,29 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed)).
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
-    
+
 	// Create a horizontal line divider
 	horizontalLine := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.DimWhite)
-	
+
 	// Create a string of unicode box drawing characters to form a line
 	lineWidth := 30 // Adjust based on expected panel width
-	lineRune := '─'  // Unicode box drawing character for horizontal line
+	lineRune := '─' // Unicode box drawing character for horizontal line
 	line := strings.Repeat(string(lineRune), lineWidth)
 	horizontalLine.SetText(line)
-	
+
+	// Create a box for the current phase
 	phaseBox := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
-	
-	// Create a box for the current phase
+
 	if !model.Options.Rules[model.Options.Default].OneTurnForAllPlayers {
-		phaseBox = tview.NewTextView().
-			SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase])).
-			SetTextAlign(tview.AlignCenter).
-			SetTextColor(model.CurrentColorPalette.White)
+		phaseBox.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
 	} else {
-		phaseBox = tview.NewTextView().
-			SetText(fmt.Sprintf("Turn: %d", player.TurnCount)).
-			SetTextAlign(tview.AlignCenter).
-			SetTextColor(model.CurrentColorPalette.White)
+		phaseBox.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
 	}
-	
+
 	// Add content to the upper cell
 	upperCell.AddItem(nameBox, 1, 1, false).
 		AddItem(tview.NewBox(), 1, 1, false). // Spacer
@@ -252,16 +249,16 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		AddItem(horizontalLine, 1, 0, false). // Horizontal line divider
 		AddItem(phaseBox, 1, 1, false).
 		AddItem(tview.NewBox(), 0, 1, false) // Flexible spacer
-	
+
 	// Create lower cell flex that will contain the action log
 	lowerCell := tview.NewFlex().SetDirection(tview.FlexRow)
-	
+
 	// Create a title for the action log
 	logTitle := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetText("Action Log").
 		SetTextColor(model.CurrentColorPalette.White)
-	
+
 	// Create a text view for the action log
 	logView := tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
@@ -280,11 +277,11 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		}
 		logView.SetText(logText.String())
 	}
-	
+
 	// Add content to the lower cell
 	lowerCell.AddItem(logTitle, 1, 0, false)
 	lowerCell.AddItem(logView, 0, 1, false) // Flexible sizing for log
-	
+
 	// Get border color based on the player
 	var borderColor tcell.Color
 	switch color {
@@ -299,10 +296,10 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	default:
 		borderColor = model.CurrentColorPalette.Black
 	}
-	
+
 	// Add the upper cell to the main panel (fixed size for player info)
 	panel.AddItem(upperCell, 7, 0, false)
-	
+
 	// Add the lower cell to the main panel with action log (flexible size to fill remaining space)
 	panel.AddItem(lowerCell, 0, 3, false)
 
@@ -312,7 +309,7 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 
 	// Set the border color based on the player
 	panel.SetBorderColor(borderColor)
-	
+
 	// Set the text color of the horizontal divider to match the border color
 	horizontalLine.SetTextColor(borderColor)
 
@@ -382,7 +379,7 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 	for i, player := range players {
 		// Get the upper cell
 		upperCell := playerPanels[i].GetItem(0).(*tview.Flex)
-		
+
 		// Get the text views from upper cell
 		nameBox := upperCell.GetItem(0).(*tview.TextView)
 		timeBox := upperCell.GetItem(2).(*tview.TextView)
@@ -393,7 +390,7 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 		timeBox.SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed))
 
 		// Update current phase
-		if model.Options.Rules[model.Options.Default].OneTurnForAllPlayers != true {
+		if !model.Options.Rules[model.Options.Default].OneTurnForAllPlayers {
 			phaseBox.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
 		} else {
 			phaseBox.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
@@ -421,21 +418,21 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 			timeBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			phaseBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 		}
-		
+
 		// Set the horizontal line color to match the border
 		horizontalLine.SetTextColor(playerPanels[i].GetBorderColor())
-		
+
 		// Update action log if it exists
 		lowerCell := playerPanels[i].GetItem(1).(*tview.Flex)
 		if lowerCell != nil && lowerCell.GetItemCount() > 1 {
 			logView := lowerCell.GetItem(1).(*tview.TextView)
-			
+
 			// Update the log text
 			var logText strings.Builder
 			for _, entry := range player.ActionLog {
 				logText.WriteString(entry + "\n")
 			}
-			
+
 			// Only update if content has changed
 			if logText.String() != logView.GetText(false) {
 				logView.SetText(logText.String())
@@ -518,7 +515,7 @@ func createTextColumn(text string, color tcell.Color) *tview.TextView {
 }
 
 // createOptionsScreen creates the options screen with various settings
-func createOptionsScreen(model *Model) *tview.Grid {
+func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	optionsPanel := tview.NewGrid().
 		SetRows(10).
 		SetColumns(0).
@@ -534,59 +531,62 @@ func createOptionsScreen(model *Model) *tview.Grid {
 	// Create dropdown for rulesets
 	rulesetBox := tview.NewDropDown().
 		SetLabel("Select rules: ").
-		SetOptions(getRulesetNames(model.Options.Rules), func(option string, index int) {
-			model.Options.Default = index
-			model.Phases = model.Options.Rules[index].Phases
-			updateRulesetContent(model, currentRulesetContentBox)
-		}).
+		SetOptions(getRulesetNames(model.Options.Rules), nil).
 		SetCurrentOption(model.Options.Default).
 		SetLabelColor(model.CurrentColorPalette.White)
+	// Set the changed function after initialization
+	rulesetBox.SetSelectedFunc(func(option string, index int) {
+		msgChan <- &SetRulesetMsg{Index: index}
+	})
 
 	// Create input field for player count
 	playerCountBox := tview.NewInputField().
 		SetLabel("Players: ").
 		SetText(strconv.Itoa(model.Options.PlayerCount)).
 		SetLabelColor(model.CurrentColorPalette.White).
-		SetFieldWidth(1).
-		SetChangedFunc(func(text string) {
-			if count, err := strconv.Atoi(text); err == nil && count > 0 {
-				model.Options.PlayerCount = count
-			}
-		})
+		SetFieldWidth(1)
+	
+	// Set the changed function after initialization, not during
+	playerCountBox.SetChangedFunc(func(text string) {
+		if count, err := strconv.Atoi(text); err == nil && count > 0 {
+			msgChan <- &SetPlayerCountMsg{Count: count}
+		}
+	})
 
 	// Create player name input fields
-	playerNamesBox := createPlayerNameFields(model, currentRulesetContentBox)
+	playerNamesBox := createPlayerNameFields(model, msgChan)
 
 	// Create dropdown for color palettes
 	colorPaletteBox := tview.NewDropDown().
 		SetLabel("Select color palette: ").
-		SetOptions(colorPalettes, func(option string, index int) {
-			model.Options.ColorPalette = option
-			model.CurrentColorPalette = GetColorPaletteByName(option)
-			updateRulesetContent(model, currentRulesetContentBox)
-		}).
+		SetOptions(colorPalettes, nil).
 		SetCurrentOption(GetColorPaletteIndexByName(model.Options.ColorPalette)).
 		SetLabelColor(model.CurrentColorPalette.White)
+	// Set the changed function after initialization
+	colorPaletteBox.SetSelectedFunc(func(option string, index int) {
+		msgChan <- &SetColorPaletteMsg{Name: option}
+	})
 
 	// Create dropdown for time format
 	timeFormatBox := tview.NewDropDown().
 		SetLabel("Select time format: ").
-		SetOptions([]string{"AMPM", "24-hour"}, func(option string, index int) {
-			model.Options.TimeFormat = option
-			updateRulesetContent(model, currentRulesetContentBox)
-		}).
+		SetOptions([]string{"AMPM", "24-hour"}, nil).
 		SetCurrentOption(timeFormatToIndex(model.Options.TimeFormat)).
 		SetLabelColor(model.CurrentColorPalette.White)
+	// Set the changed function after initialization
+	timeFormatBox.SetSelectedFunc(func(option string, index int) {
+		msgChan <- &SetTimeFormatMsg{Format: option}
+	})
 
 	// Create checkbox for "One Turn For All Players"
 	oneTurnForAllPlayersBox := tview.NewCheckbox().
 		SetLabel("One Turn For All Players: ").
 		SetChecked(model.Options.Rules[model.Options.Default].OneTurnForAllPlayers).
-		SetChangedFunc(func(checked bool) {
-			model.Options.Rules[model.Options.Default].OneTurnForAllPlayers = checked
-			updateRulesetContent(model, currentRulesetContentBox)
-		}).
 		SetLabelColor(model.CurrentColorPalette.White)
+	// Set the changed function after initialization
+	oneTurnForAllPlayersBox.SetChangedFunc(func(checked bool) {
+		msgChan <- &SetOneTurnForAllPlayersMsg{Value: checked}
+	})
 
 	// Add components to options box
 	optionsBox.AddItem(rulesetBox, 0, 1, false).
@@ -605,7 +605,11 @@ func createOptionsScreen(model *Model) *tview.Grid {
 		SetDynamicColors(true).
 		SetText("[b]Use mouse to change setting\n Press [-]O[b] to return to the main screen")
 
+	// Add a message handler to update content on model changes
 	updateRulesetContent(model, currentRulesetContentBox)
+
+	// Observe model changes and update UI accordingly
+	// This would be handled by the Render function when model updates
 
 	optionsPanel.AddItem(currentRulesetContentBox, 1, 0, 3, 2, 0, 0, false)
 	optionsPanel.AddItem(helpContentBox, 4, 0, 1, 2, 0, 0, false)
@@ -619,7 +623,7 @@ func createOptionsScreen(model *Model) *tview.Grid {
 }
 
 // createPlayerNameFields creates input fields for player names
-func createPlayerNameFields(model *Model, currentRulesetContentBox *tview.Flex) *tview.Grid {
+func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
 	playerNamesFlex := tview.NewGrid().
 		SetRows(1).
 		SetColumns(0).
@@ -630,25 +634,31 @@ func createPlayerNameFields(model *Model, currentRulesetContentBox *tview.Flex) 
 		model.Options.PlayerNames = append(model.Options.PlayerNames, make([]string, model.Options.PlayerCount-len(model.Options.PlayerNames))...)
 	}
 
-	for i := range model.Options.PlayerCount {
+	for i := 0; i < model.Options.PlayerCount; i++ {
 		label := ""
 		if i == 0 {
 			label = "Player names: "
 		}
+		
+		// Create the input field without setting the changed function initially
+		inputField := tview.NewInputField().
+			SetLabel(label).
+			SetText(model.Options.PlayerNames[i]).
+			SetLabelColor(model.CurrentColorPalette.White).
+			SetFieldWidth(10)
+		
+		// Store index in a closure to avoid variable capture issues
+		idx := i
+		inputField.SetChangedFunc(func(text string) {
+			msgChan <- &SetPlayerNameMsg{
+				Index: idx,
+				Name:  strings.TrimSpace(text),
+			}
+		})
+		
 		playerNamesFlex.AddItem(
-			tview.NewInputField().
-				SetLabel(label).
-				SetText(model.Options.PlayerNames[i]).
-				SetLabelColor(model.CurrentColorPalette.White).
-				SetFieldWidth(10).
-				SetChangedFunc(func(idx int) func(string) {
-					return func(text string) {
-						model.Options.PlayerNames[idx] = strings.TrimSpace(text)
-						updateRulesetContent(model, currentRulesetContentBox)
-					}
-				}(i)),
-			1, i, 1, 1, 0, 0, false,
-		)
+			inputField,
+			1, i, 1, 1, 0, 0, false)
 	}
 
 	return playerNamesFlex

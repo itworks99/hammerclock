@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gdamore/tcell/v2"
 	"hammerclock/internal/app/about"
 	"hammerclock/internal/app/status"
 
@@ -80,15 +81,16 @@ func NewView(model *Model) *View {
 	topFlex.AddItem(rightSpacer, 0, 1, false)
 
 	// Add a clock display to the right side
-	clockDisplay := tview.NewTextView().
+	hClock := tview.NewTextView().
 		SetTextAlign(tview.AlignRight).
-		SetDynamicColors(true)
+		SetDynamicColors(true).
+		SetTextColor(model.CurrentColorPalette.White)
 
 	// Set the clock format based on the model's options
-	var clockLayout = ClockLayout(model)
+	var clockFormat = ClockLayout(model)
 
-	clockDisplay.SetText(time.Now().Format(clockLayout))
-	topFlex.AddItem(clockDisplay, 10, 0, false)
+	hClock.SetText(time.Now().Format(clockFormat))
+	topFlex.AddItem(hClock, 10, 0, false)
 
 	// Add the top flex container to the main layout
 	mainFlex.AddItem(topFlex, 1, 0, false)
@@ -142,7 +144,7 @@ func NewView(model *Model) *View {
 		TopMenu:               topMenu,
 		BottomMenu:            bottomMenu,
 		StatusPanel:           statusPanel,
-		ClockDisplay:          clockDisplay,
+		ClockDisplay:          hClock,
 		OptionsScreen:         optionsScreen,
 		AboutScreen:           aboutScreen,
 	}
@@ -175,7 +177,7 @@ func (v *View) Render(model *Model) {
 	}
 }
 
-// UpdateStatusPanel updates the status panel with the current game status
+// updateStatusPanel updates the status panel with the current game status
 func updateStatusPanel(panel *tview.Flex, s string, model *Model) {
 	statusTextView := panel.GetItem(0).(*tview.TextView)
 	statusTextView.SetText(s)
@@ -367,97 +369,127 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 	}
 }
 
-// createOptionsScreen creates a screen that displays the current options
-func createOptionsScreen(model *Model) *tview.Grid {
-	optionsPanel := tview.NewGrid().
-		SetRows(0, 0).
-		SetColumns(0, 0).
-		SetBorders(true)
+// updateRulesetContent updates the content of the ruleset display
+func updateRulesetContent(model *Model, textView *tview.Flex) {
+	var leftText, rightText strings.Builder
 
-	optionsBox := tview.NewFlex().
-		SetDirection(tview.FlexRow)
+	// Build left column content
+	leftText.WriteString(fmt.Sprintf(
+		" [b]Name of the ruleset:[-] %s\n\n [b]Player Count:[-] %d\n\n [b]Players:[-]\n",
+		model.Options.Rules[model.Options.Default].Name,
+		model.Options.PlayerCount,
+	))
+	for i, name := range model.Players {
+		leftText.WriteString(fmt.Sprintf(" %d. %s\n", i+1, name.Name))
+	}
+	leftText.WriteString(fmt.Sprintf(
+		"\n [b]One Turn For All Players:[-] %t\n\n [b]Color Palette:[-] %s\n\n [b]Time Format:[-] %s\n\n",
+		model.Options.Rules[model.Options.Default].OneTurnForAllPlayers,
+		model.Options.ColorPalette,
+		model.Options.TimeFormat,
+	))
 
-	HelpContentBox := tview.NewTextView().
-		SetTextAlign(tview.AlignLeft).
-		SetTextColor(model.CurrentColorPalette.White).
-		SetDynamicColors(true)
-
-	currentRulesetContentBox := tview.NewTextView().
-		SetTextAlign(tview.AlignLeft).
-		SetTextColor(model.CurrentColorPalette.White).
-		SetDynamicColors(true)
-
-	var rulesetsNames []string
-	for _, ruleset := range model.Options.Rules {
-		rulesetsNames = append(rulesetsNames, ruleset.Name)
+	// Build right column content
+	rightText.WriteString(" [b]Phases:[-]\n")
+	for i, phase := range model.Phases {
+		rightText.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
 	}
 
+	leftColumn := createTextColumn(leftText.String(), model.CurrentColorPalette.White)
+	rightColumn := createTextColumn(rightText.String(), model.CurrentColorPalette.White)
+
+	// Create grid layout
+	grid := tview.NewGrid().
+		AddItem(leftColumn, 0, 0, 1, 1, 0, 0, false).
+		AddItem(rightColumn, 0, 1, 1, 1, 0, 0, false)
+
+	// Clear and update the text view
+	textView.Clear()
+	textView.AddItem(grid, 0, 1, false)
+}
+
+// createTextColumn creates a text column with the given text
+func createTextColumn(text string, color tcell.Color) *tview.TextView {
+	return tview.NewTextView().
+		SetTextAlign(tview.AlignLeft).
+		SetTextColor(color).
+		SetDynamicColors(true).
+		SetText(text)
+}
+
+// createOptionsScreen creates the options screen with various settings
+func createOptionsScreen(model *Model) *tview.Grid {
+	const pressEnterToSave = "(Press Enter to save changes):"
+
+	optionsPanel := tview.NewGrid().
+		SetRows(10).
+		SetColumns(0).
+		SetBorders(true)
+
+	optionsBox := tview.NewFlex().SetDirection(tview.FlexRow)
+	currentRulesetContentBox := tview.NewFlex().
+		SetDirection(tview.FlexRow)
+
+	// Cache color palettes to avoid repeated calls
+	colorPalettes := GetColorPalettes()
+
+	// Create dropdown for rulesets
 	rulesetBox := tview.NewDropDown().
-		SetLabel("Select ruleset(press Enter): ").
-		SetOptions(rulesetsNames, func(option string, index int) {
-			if index < 0 || index >= len(model.Options.Rules) {
-				// Handle invalid index
-				currentRulesetContentBox.SetText("[red]Error: Invalid ruleset selection![-]")
-				return
-			}
-			// Update the model with the selected ruleset
+		SetLabel("Select rules "+pressEnterToSave).
+		SetOptions(getRulesetNames(model.Options.Rules), func(option string, index int) {
 			model.Options.Default = index
 			model.Phases = model.Options.Rules[index].Phases
-			// Update the ruleset content display
 			updateRulesetContent(model, currentRulesetContentBox)
 		}).
 		SetCurrentOption(model.Options.Default).
 		SetLabelColor(model.CurrentColorPalette.White)
 
+	// Create input field for player count
 	playerCountBox := tview.NewInputField().
-		SetLabel("Player Count: ").
-		SetText(fmt.Sprintf("%d", model.Options.PlayerCount)).
+		SetLabel("Players " + pressEnterToSave).
+		SetText(strconv.Itoa(model.Options.PlayerCount)).
 		SetLabelColor(model.CurrentColorPalette.White).
-		SetFieldWidth(3).
+		SetFieldWidth(1).
 		SetChangedFunc(func(text string) {
-			count, err := strconv.Atoi(text)
-			if err == nil && count > 0 {
+			if count, err := strconv.Atoi(text); err == nil && count > 0 {
 				model.Options.PlayerCount = count
 			}
 		})
 
-	playerNamesBox := tview.NewInputField().
-		SetLabel("Player Names: ").
-		SetText(strings.Join(model.Options.PlayerNames, ", ")).
-		SetLabelColor(model.CurrentColorPalette.White).
-		SetFieldWidth(20).
-		SetChangedFunc(func(text string) {
-			names := strings.Split(text, ",")
-			for i := 0; i < len(names); i++ {
-				names[i] = strings.TrimSpace(names[i])
-			}
-			model.Options.PlayerNames = names
-		})
+	// Create player name input fields
+	playerNamesBox := createPlayerNameFields(model)
 
-	// Create a dropdown for color palettes
-	colorPalettes := GetColorPalettes()
+	// Create dropdown for color palettes
 	colorPaletteBox := tview.NewDropDown().
-		SetLabel("Select color palette(press Enter): ").
+		SetLabel("Select color palette: ").
 		SetOptions(colorPalettes, func(option string, index int) {
 			model.Options.ColorPalette = option
 			model.CurrentColorPalette = GetColorPaletteByName(option)
-		}).SetCurrentOption(GetColorPaletteIndexByName(model.Options.ColorPalette)).
+			updateRulesetContent(model, currentRulesetContentBox)
+		}).
+		SetCurrentOption(GetColorPaletteIndexByName(model.Options.ColorPalette)).
 		SetLabelColor(model.CurrentColorPalette.White)
 
+	// Create dropdown for time format
 	timeFormatBox := tview.NewDropDown().
-		SetLabel("Select time format(press Enter): ").
+		SetLabel("Select time format: ").
 		SetOptions([]string{"AMPM", "24-hour"}, func(option string, index int) {
 			model.Options.TimeFormat = option
-		}).SetCurrentOption(timeFormatToIndex(model.Options.TimeFormat)).
+		}).
+		SetCurrentOption(timeFormatToIndex(model.Options.TimeFormat)).
 		SetLabelColor(model.CurrentColorPalette.White)
 
-	oneTurnForAllPlayersBox := tview.NewDropDown().
-		SetLabel("One Turn For All Players(press Enter): ").
-		SetOptions([]string{"true", "false"}, func(option string, index int) {
-			model.Options.Rules[model.Options.Default].OneTurnForAllPlayers = index == 0
-		}).SetCurrentOption(boolToIndex(model.Options.Rules[model.Options.Default].OneTurnForAllPlayers)).
+	// Create checkbox for "One Turn For All Players"
+	oneTurnForAllPlayersBox := tview.NewCheckbox().
+		SetLabel("One Turn For All Players: ").
+		SetChecked(model.Options.Rules[model.Options.Default].OneTurnForAllPlayers).
+		SetChangedFunc(func(checked bool) {
+			model.Options.Rules[model.Options.Default].OneTurnForAllPlayers = checked
+			updateRulesetContent(model, currentRulesetContentBox)
+		}).
 		SetLabelColor(model.CurrentColorPalette.White)
 
+	// Add components to options box
 	optionsBox.AddItem(rulesetBox, 0, 1, false).
 		AddItem(playerCountBox, 0, 1, false).
 		AddItem(playerNamesBox, 0, 1, false).
@@ -465,69 +497,73 @@ func createOptionsScreen(model *Model) *tview.Grid {
 		AddItem(timeFormatBox, 0, 1, false).
 		AddItem(oneTurnForAllPlayersBox, 0, 1, false)
 
+	// Add options box and help content to options panel
 	optionsPanel.AddItem(optionsBox, 0, 0, 1, 2, 0, 0, false)
 
-	var HelpContent strings.Builder
-	HelpContent.WriteString("\n")
-	HelpContent.WriteString("\n [b]Press [-]O[b] to return to the main screen")
-	HelpContentBox.SetText(HelpContent.String())
+	helpContentBox := tview.NewTextView().
+		SetTextAlign(tview.AlignCenter).
+		SetTextColor(model.CurrentColorPalette.White).
+		SetDynamicColors(true).
+		SetText("\n\n [b]Press [-]O[b] to return to the main screen")
 
-	var currentRuleset strings.Builder
-	currentRuleset.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Rules[model.Options.Default].Name + "\n\n")
-	currentRuleset.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
-	currentRuleset.WriteString(" [b]Players:[-]\n")
-	for i, name := range model.Players {
-		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
-	}
-	currentRuleset.WriteString(" [b]Phases:[-]\n")
-	for i, phase := range model.Phases {
-		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
-	}
-	currentRuleset.WriteString("\n")
-	currentRuleset.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.Rules[model.Options.Default].OneTurnForAllPlayers) + "\n\n")
-	currentRuleset.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
-	currentRuleset.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
-	currentRulesetContentBox.SetText(currentRuleset.String())
+	updateRulesetContent(model, currentRulesetContentBox)
 
 	optionsPanel.AddItem(currentRulesetContentBox, 1, 0, 3, 2, 0, 0, false)
-	optionsPanel.AddItem(HelpContentBox, 4, 0, 1, 2, 0, 0, false)
+	optionsPanel.AddItem(helpContentBox, 4, 0, 1, 2, 0, 0, false)
 
-	optionsPanel.SetBorder(true)
-	optionsPanel.SetTitle(" options ")
-	optionsPanel.SetBorderColor(model.CurrentColorPalette.Cyan)
-	optionsPanel.SetBackgroundColor(model.CurrentColorPalette.Black)
+	optionsPanel.SetBorder(true).
+		SetTitle(" options ").
+		SetBorderColor(model.CurrentColorPalette.Cyan).
+		SetBackgroundColor(model.CurrentColorPalette.Black)
 
 	return optionsPanel
 }
 
-// Create a function to update the ruleset content
-func updateRulesetContent(model *Model, textView *tview.TextView) {
-	var currentRuleset strings.Builder
-	currentRuleset.WriteString(" [b]Name of the ruleset:[-] " + model.Options.Rules[model.Options.Default].Name + "\n\n")
-	currentRuleset.WriteString(" [b]Player Count:[-] " + fmt.Sprintf("%d", model.Options.PlayerCount) + "\n\n")
-	currentRuleset.WriteString(" [b]Players:[-]\n")
-	for i, name := range model.Players {
-		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, name))
+// createPlayerNameFields creates input fields for player names
+func createPlayerNameFields(model *Model) *tview.Grid {
+	playerNamesFlex := tview.NewGrid().
+		SetRows(1).
+		SetColumns(0).
+		SetBorders(false)
+
+	// Preallocate player names slice
+	if len(model.Options.PlayerNames) < model.Options.PlayerCount {
+		model.Options.PlayerNames = append(model.Options.PlayerNames, make([]string, model.Options.PlayerCount-len(model.Options.PlayerNames))...)
 	}
-	currentRuleset.WriteString(" [b]Phases:[-]\n")
-	for i, phase := range model.Phases {
-		currentRuleset.WriteString(fmt.Sprintf("  %d. %s\n", i+1, phase))
+
+	for i := 0; i < model.Options.PlayerCount; i++ {
+		label := ""
+		if i == 0 {
+			label = "Player names:"
+		}
+		playerNamesFlex.AddItem(
+			tview.NewInputField().
+				SetLabel(label).
+				SetText(model.Options.PlayerNames[i]).
+				SetLabelColor(model.CurrentColorPalette.White).
+				SetFieldWidth(10).
+				SetChangedFunc(func(idx int) func(string) {
+					return func(text string) {
+						model.Options.PlayerNames[idx] = strings.TrimSpace(text)
+					}
+				}(i)),
+			1, i, 1, 1, 0, 0, false,
+		)
 	}
-	currentRuleset.WriteString("\n")
-	currentRuleset.WriteString(" [b]One Turn For All Players:[-] " + fmt.Sprintf("%t", model.Options.Rules[model.Options.Default].OneTurnForAllPlayers) + "\n\n")
-	currentRuleset.WriteString(" [b]Color Palette:[-] " + model.Options.ColorPalette + "\n\n")
-	currentRuleset.WriteString(" [b]Time Format:[-] " + model.Options.TimeFormat + "\n\n")
-	textView.SetText(currentRuleset.String())
+
+	return playerNamesFlex
 }
 
-func boolToIndex(players bool) int {
-	if players {
-		return 0 // true
+// getRulesetNames returns the names of the rulesets
+func getRulesetNames(rules []Rules) []string {
+	names := make([]string, len(rules))
+	for i, ruleset := range rules {
+		names[i] = ruleset.Name
 	}
-	return 1 // false
-
+	return names
 }
 
+// timeFormatToIndex converts the time format string to an index
 func timeFormatToIndex(format string) int {
 	if format == "AMPM" {
 		return 0
@@ -535,6 +571,7 @@ func timeFormatToIndex(format string) int {
 	return 1 // Default to 24-hour format
 }
 
+// GetColorPaletteIndexByName returns the index of the color palette by name
 func GetColorPaletteIndexByName(palette string) int {
 	for i, name := range GetColorPalettes() {
 		if name == palette {

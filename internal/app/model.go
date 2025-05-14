@@ -24,10 +24,10 @@ type Model struct {
 // Player represents a player in the game
 type Player struct {
 	Name         string
-	TimeElapsed  time.Duration
-	IsTurn       bool
-	CurrentPhase int
-	TurnCount    int // Counter to track number of turns completed
+	TimeElapsed  time.Duration // Time elapsed for the player
+	IsTurn       bool          // Indicates if it's this player's turn
+	CurrentPhase int           // Current phase of the game for this player
+	TurnCount    int           // Counter to track number of turns completed
 	ArmyList     []Unit
 	ActionLog    []LogPanel.LogEntry // Log of player actions during the game
 }
@@ -95,9 +95,9 @@ func NewModel() Model {
 
 		// Add initial log entry
 		if i == 0 {
-			AddLogEntry(players[i], "Player initialized as active player")
+			AddLogEntry(players[i], "Initialized - active player")
 		} else {
-			AddLogEntry(players[i], "Player initialized")
+			AddLogEntry(players[i], "Initialized")
 		}
 	}
 

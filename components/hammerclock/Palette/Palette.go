@@ -77,8 +77,8 @@ var KillTeamPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(5, 5, 5),       // Shadow Black
 }
 
-// GetColorPalettes returns a list of available color palettes
-func GetColorPalettes() []string {
+// ColorPalettes returns a list of available color palettes
+func ColorPalettes() []string {
 	return []string{
 		"k9s",
 		"dracula",
@@ -88,8 +88,8 @@ func GetColorPalettes() []string {
 	}
 }
 
-// GetColorPaletteByName returns the color palette for the given name
-func GetColorPaletteByName(name string) ColorPalette {
+// ColorPaletteByName returns the color palette for the given name
+func ColorPaletteByName(name string) ColorPalette {
 	switch name {
 	case "dracula":
 		return DraculaPalette
@@ -119,9 +119,9 @@ func ApplyColorPalette(palette ColorPalette) {
 	tview.Styles.ContrastSecondaryTextColor = palette.Yellow
 }
 
-// GetColorPaletteIndexByName returns the index of the color palette by name
-func GetColorPaletteIndexByName(palette string) int {
-	for i, name := range GetColorPalettes() {
+// ColorPaletteIndexByName returns the index of the color palette by name
+func ColorPaletteIndexByName(palette string) int {
+	for i, name := range ColorPalettes() {
 		if name == palette {
 			return i
 		}

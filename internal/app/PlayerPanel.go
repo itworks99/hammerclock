@@ -10,6 +10,7 @@ import (
 	"github.com/rivo/tview"
 )
 
+// CreatePlayerPanel creates a player panel
 func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	panel := tview.NewFlex().SetDirection(tview.FlexRow)
 	upper := tview.NewFlex().SetDirection(tview.FlexRow)
@@ -91,6 +92,7 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	return panel
 }
 
+// UpdatePlayerPanels updates the player panels with the current player data
 func updatePlayerPanels(players []*Player, panels []*tview.Flex, model *Model) {
 	for i, player := range players {
 		upper := panels[i].GetItem(0).(*tview.Flex)
@@ -130,7 +132,7 @@ func updatePlayerPanels(players []*Player, panels []*tview.Flex, model *Model) {
 			// The log container has the log view as its only item now
 			logView := logContainer.GetItem(0).(*tview.TextView)
 
-			// Use the logpanel package to update log content
+			// Update log panel content
 			LogPanel.SetLogContent(logView, player.ActionLog)
 		}
 	}
@@ -144,7 +146,7 @@ func AddLogEntry(player *Player, format string, args ...any) {
 	}
 
 	logEntry := LogPanel.LogEntry{
-		DateTime:   time.Now(),
+		DateTime:   time.Now().Local(),
 		PlayerName: player.Name,
 		Turn:       player.TurnCount,
 		Phase:      currentPhase,

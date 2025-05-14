@@ -1,4 +1,4 @@
-package components
+package fileio
 
 import (
 	"encoding/json"

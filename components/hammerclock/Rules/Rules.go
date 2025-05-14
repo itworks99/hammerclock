@@ -78,8 +78,8 @@ var ChessRules = Rules{
 	OneTurnForAllPlayers: true,
 }
 
-// GetRulesetNames returns the names of the rulesets
-func GetRulesetNames(rules []Rules) []string {
+// RulesetNames returns the names of the rulesets
+func RulesetNames(rules []Rules) []string {
 	names := make([]string, len(rules))
 	for i, ruleset := range rules {
 		names[i] = ruleset.Name

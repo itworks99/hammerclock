@@ -457,7 +457,7 @@ func handleSetPlayerName(msg *SetPlayerNameMsg, model Model) (Model, Command) {
 func handleSetColorPalette(msg *SetColorPaletteMsg, model Model) (Model, Command) {
 	newModel := model
 	newModel.Options.ColorPalette = msg.Name
-	newModel.CurrentColorPalette = Palette.GetColorPaletteByName(msg.Name)
+	newModel.CurrentColorPalette = Palette.ColorPaletteByName(msg.Name)
 	return newModel, NoCommand
 }
 

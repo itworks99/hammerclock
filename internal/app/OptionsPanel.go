@@ -24,12 +24,12 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetDirection(tview.FlexRow)
 
 	// Cache color palettes to avoid repeated calls
-	colorPalettes := Palette.GetColorPalettes()
+	colorPalettes := Palette.ColorPalettes()
 
 	// Create dropdown for rulesets
 	rulesetBox := tview.NewDropDown().
 		SetLabel("Select rules: ").
-		SetOptions(Rules.GetRulesetNames(model.Options.Rules), nil).
+		SetOptions(Rules.RulesetNames(model.Options.Rules), nil).
 		SetCurrentOption(model.Options.Default).
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
@@ -58,7 +58,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	colorPaletteBox := tview.NewDropDown().
 		SetLabel("Select color palette: ").
 		SetOptions(colorPalettes, nil).
-		SetCurrentOption(Palette.GetColorPaletteIndexByName(model.Options.ColorPalette)).
+		SetCurrentOption(Palette.ColorPaletteIndexByName(model.Options.ColorPalette)).
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	colorPaletteBox.SetSelectedFunc(func(option string, index int) {

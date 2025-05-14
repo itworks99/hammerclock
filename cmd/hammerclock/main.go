@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"hammerclock/components"
 	"hammerclock/components/hammerclock/Palette"
+	"hammerclock/components/hammerclock/fileio"
 	hammerclockConfig "hammerclock/config"
 	"hammerclock/internal/app"
 	"hammerclock/internal/app/LogPanel"
@@ -15,7 +15,8 @@ import (
 
 // CLI usage information
 var cliUsage = `
-Hammerclock - A terminal-based timer and phase tracker for tabletop games
+Hammerclock ` + hammerclockConfig.Version + `
+Terminal-based timer and phase tracker for tabletop games
 
 Usage:
   hammerclock [options]
@@ -40,13 +41,13 @@ func main() {
 	flag.Parse()
 
 	// Load options from file
-	options := components.LoadOptions(*optionsFileFlag)
+	options := fileio.LoadOptions(*optionsFileFlag)
 
 	// Create the model
 	model := app.NewModel()
 	model.Options = options
 	model.Phases = options.Rules[options.Default].Phases
-	model.CurrentColorPalette = Palette.GetColorPaletteByName(options.ColorPalette)
+	model.CurrentColorPalette = Palette.ColorPaletteByName(options.ColorPalette)
 
 	// Create players based on options
 	players := make([]*app.Player, options.PlayerCount)
@@ -66,9 +67,9 @@ func main() {
 
 		// Add initial player log message
 		if i == 0 {
-			app.AddLogEntry(players[i], "Player initialized as active player (Turn %d)", players[i].TurnCount)
+			app.AddLogEntry(players[i], "Initialized - active player", players[i].TurnCount)
 		} else {
-			app.AddLogEntry(players[i], "Player initialized (Turn %d)", players[i].TurnCount)
+			app.AddLogEntry(players[i], "Initialized", players[i].TurnCount)
 		}
 	}
 	model.Players = players

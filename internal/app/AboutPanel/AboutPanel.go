@@ -1,4 +1,4 @@
-package about
+package AboutPanel
 
 import (
 	"io"
@@ -10,7 +10,7 @@ import (
 	"hammerclock/config"
 )
 
-func About(mainColor tcell.Color) *tview.Flex {
+func Create(mainColor tcell.Color) *tview.Flex {
 	aboutPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create content with about information

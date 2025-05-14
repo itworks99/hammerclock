@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"hammerclock/internal/app/about"
+	"hammerclock/internal/app/AboutPanel"
+	"hammerclock/internal/app/StatusPanel"
 	"hammerclock/internal/app/clock"
-	"hammerclock/internal/app/statusbar"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -97,13 +97,13 @@ func NewView(model *Model, msgChan chan<- Message) *View {
 
 	// Create options and about screens
 	optionsScreen := createOptionsScreen(model, msgChan)
-	aboutScreen := about.About(model.CurrentColorPalette.White)
+	aboutScreen := AboutPanel.Create(model.CurrentColorPalette.White)
 
 	// Add player panels to the main layout
 	mainFlex.AddItem(playerPanelsContainer, 0, 1, false)
 
 	// Create statusbar panel
-	statusPanel := statusbar.StatusBar(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
+	statusPanel := StatusPanel.Create(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
 
 	// Add statusbar panels to the main layout
 	mainFlex.AddItem(statusPanel, 3, 0, false)
@@ -545,7 +545,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetText(strconv.Itoa(model.Options.PlayerCount)).
 		SetLabelColor(model.CurrentColorPalette.White).
 		SetFieldWidth(1)
-	
+
 	// Set the changed function after initialization, not during
 	playerCountBox.SetChangedFunc(func(text string) {
 		if count, err := strconv.Atoi(text); err == nil && count > 0 {
@@ -639,14 +639,14 @@ func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
 		if i == 0 {
 			label = "Player names: "
 		}
-		
+
 		// Create the input field without setting the changed function initially
 		inputField := tview.NewInputField().
 			SetLabel(label).
 			SetText(model.Options.PlayerNames[i]).
 			SetLabelColor(model.CurrentColorPalette.White).
 			SetFieldWidth(10)
-		
+
 		// Store index in a closure to avoid variable capture issues
 		idx := i
 		inputField.SetChangedFunc(func(text string) {
@@ -655,7 +655,7 @@ func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
 				Name:  strings.TrimSpace(text),
 			}
 		})
-		
+
 		playerNamesFlex.AddItem(
 			inputField,
 			1, i, 1, 1, 0, 0, false)

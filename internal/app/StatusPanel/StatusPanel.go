@@ -1,12 +1,12 @@
-package statusbar
+package StatusPanel
 
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
-// StatusBar creates a panel that displays the game statusbar
-func StatusBar(status string, borderColor tcell.Color, backgroundColor tcell.Color) *tview.Flex {
+// Create creates a panel that displays the game statusbar
+func Create(status string, borderColor tcell.Color, backgroundColor tcell.Color) *tview.Flex {
 	statusPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create statusbar text view

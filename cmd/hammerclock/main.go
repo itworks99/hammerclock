@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"hammerclock/components"
+	"hammerclock/components/hammerclock/Palette"
 	hammerclockConfig "hammerclock/config"
 	"hammerclock/internal/app"
+	"hammerclock/internal/app/LogPanel"
 )
 
 // CLI usage information
@@ -43,7 +45,7 @@ func main() {
 	model := app.NewModel()
 	model.Options = options
 	model.Phases = options.Rules[options.Default].Phases
-	model.CurrentColorPalette = app.GetColorPaletteByName(options.ColorPalette)
+	model.CurrentColorPalette = Palette.GetColorPaletteByName(options.ColorPalette)
 
 	// Create players based on options
 	players := make([]*app.Player, options.PlayerCount)
@@ -58,9 +60,9 @@ func main() {
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
 			TurnCount:    0,
-			ActionLog:    []string{}, // Initialize empty action log
+			ActionLog:    []LogPanel.LogEntry{}, // Initialize empty action log
 		}
-		
+
 		// Add initial player log message
 		if i == 0 {
 			app.AddLogEntry(players[i], "Player initialized as active player (Turn %d)", players[i].TurnCount)

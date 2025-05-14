@@ -5,6 +5,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"hammerclock/components/hammerclock/Palette"
+	"hammerclock/components/hammerclock/Rules"
 )
 
 // Message represents a message that can be sent to the Update function
@@ -42,7 +44,6 @@ type KeyPressMsg struct {
 	Rune rune
 }
 
-// Option update messages
 // SetRulesetMsg is sent when the user selects a different ruleset
 type SetRulesetMsg struct {
 	Index int
@@ -125,12 +126,12 @@ func Update(msg Message, model Model) (Model, Command) {
 func handleStartGame(model Model) (Model, Command) {
 	// Create a copy of the model to avoid modifying the original
 	newModel := model
-	
+
 	// Toggle between start and pause
 	if model.GameStatus == GamePaused {
 		// Resume the game
 		newModel.GameStatus = GameInProgress
-		
+
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
@@ -140,7 +141,7 @@ func handleStartGame(model Model) (Model, Command) {
 	} else if model.GameStatus == GameInProgress {
 		// Pause the game
 		newModel.GameStatus = GamePaused
-		
+
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
@@ -151,7 +152,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Start the game if not already started
 		newModel.GameStatus = GameInProgress
 		newModel.GameStarted = true
-		
+
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
@@ -168,20 +169,20 @@ func handleSwitchTurns(model Model) (Model, Command) {
 	// Create a copy of the model to avoid modifying the original
 	newModel := model
 	newPlayers := make([]*Player, len(model.Players))
-	
+
 	// Log for currently active players that their turn is ending
 	for i, player := range model.Players {
 		// Create a copy of each player to avoid modifying the original
 		newPlayer := *player
 		newPlayers[i] = &newPlayer
-		
+
 		if player.IsTurn {
 			AddLogEntry(newPlayers[i], "Turn %d ended", player.TurnCount)
 		}
-		
+
 		// Switch turns
 		newPlayers[i].IsTurn = !player.IsTurn
-		
+
 		if newPlayers[i].IsTurn {
 			// Increment turn count when a player's turn begins
 			newPlayers[i].TurnCount++
@@ -193,7 +194,7 @@ func handleSwitchTurns(model Model) (Model, Command) {
 			}
 		}
 	}
-	
+
 	// Update the model with the new players
 	newModel.Players = newPlayers
 
@@ -216,19 +217,19 @@ func handleNextPhase(model Model) (Model, Command) {
 		// Create a copy of each player
 		newPlayer := *player
 		newPlayers[i] = &newPlayer
-		
+
 		if player.IsTurn && player.CurrentPhase < len(model.Phases)-1 {
 			oldPhase := player.CurrentPhase
 			newPlayers[i].CurrentPhase = player.CurrentPhase + 1
-			
+
 			// Log the phase change
-			AddLogEntry(newPlayers[i], "Turn %d - Moved from phase: %s to phase: %s", 
+			AddLogEntry(newPlayers[i], "Turn %d - Moved from phase: %s to phase: %s",
 				player.TurnCount,
-				model.Phases[oldPhase], 
+				model.Phases[oldPhase],
 				model.Phases[newPlayers[i].CurrentPhase])
 		}
 	}
-	
+
 	// Update the model with the new players
 	newModel.Players = newPlayers
 
@@ -251,19 +252,19 @@ func handlePrevPhase(model Model) (Model, Command) {
 		// Create a copy of each player
 		newPlayer := *player
 		newPlayers[i] = &newPlayer
-		
+
 		if player.IsTurn && player.CurrentPhase > 0 {
 			oldPhase := player.CurrentPhase
 			newPlayers[i].CurrentPhase = player.CurrentPhase - 1
-			
+
 			// Log the phase change
-			AddLogEntry(newPlayers[i], "Turn %d - Moved from phase: %s to phase: %s", 
+			AddLogEntry(newPlayers[i], "Turn %d - Moved from phase: %s to phase: %s",
 				player.TurnCount,
-				model.Phases[oldPhase], 
+				model.Phases[oldPhase],
 				model.Phases[newPlayers[i].CurrentPhase])
 		}
 	}
-	
+
 	// Update the model with the new players
 	newModel.Players = newPlayers
 
@@ -279,7 +280,7 @@ func handlePrevPhase(model Model) (Model, Command) {
 func handleShowOptions(model Model) (Model, Command) {
 	// Create a copy of the model to avoid modifying the original
 	newModel := model
-	
+
 	// Toggle between main screen and options screen
 	if model.CurrentScreen == "options" {
 		newModel.CurrentScreen = "main"
@@ -294,7 +295,7 @@ func handleShowOptions(model Model) (Model, Command) {
 func handleShowAbout(model Model) (Model, Command) {
 	// Create a copy of the model to avoid modifying the original
 	newModel := model
-	
+
 	// Toggle between main screen and about screen
 	if model.CurrentScreen == "about" {
 		newModel.CurrentScreen = "main"
@@ -309,7 +310,7 @@ func handleShowAbout(model Model) (Model, Command) {
 func handleShowMainScreen(model Model) (Model, Command) {
 	// Create a copy of the model to avoid modifying the original
 	newModel := model
-	
+
 	// Return to the main screen
 	newModel.CurrentScreen = "main"
 
@@ -323,16 +324,16 @@ func handleTick(model Model) (Model, Command) {
 		// Create a copy of the model to avoid modifying the original
 		newModel := model
 		newPlayers := make([]*Player, len(model.Players))
-		
+
 		for i, player := range model.Players {
 			// Create a copy of each player
 			newPlayer := *player
 			newPlayers[i] = &newPlayer
-			
+
 			if player.IsTurn {
 				oldTimeElapsed := player.TimeElapsed
 				newPlayers[i].TimeElapsed += 1 * time.Second
-				
+
 				// Log time milestone every minute
 				if oldTimeElapsed.Minutes() < newPlayers[i].TimeElapsed.Minutes() {
 					minutes := int(newPlayers[i].TimeElapsed.Minutes())
@@ -342,7 +343,7 @@ func handleTick(model Model) (Model, Command) {
 				}
 			}
 		}
-		
+
 		// Update the model with the new players
 		newModel.Players = newPlayers
 		return newModel, NoCommand
@@ -426,14 +427,14 @@ func handleSetPlayerCount(msg *SetPlayerCountMsg, model Model) (Model, Command) 
 	if msg.Count <= 0 {
 		return model, NoCommand
 	}
-	
+
 	newModel := model
 	newModel.Options.PlayerCount = msg.Count
-	
+
 	// Ensure player names slice has the right length
 	if len(newModel.Options.PlayerNames) < msg.Count {
 		newModel.Options.PlayerNames = append(
-			append([]string{}, newModel.Options.PlayerNames...), 
+			append([]string{}, newModel.Options.PlayerNames...),
 			make([]string, msg.Count-len(newModel.Options.PlayerNames))...)
 	}
 	return newModel, NoCommand
@@ -444,7 +445,7 @@ func handleSetPlayerName(msg *SetPlayerNameMsg, model Model) (Model, Command) {
 	if msg.Index < 0 || msg.Index >= len(model.Options.PlayerNames) {
 		return model, NoCommand
 	}
-	
+
 	newModel := model
 	newNames := append([]string{}, newModel.Options.PlayerNames...)
 	newNames[msg.Index] = msg.Name
@@ -456,7 +457,7 @@ func handleSetPlayerName(msg *SetPlayerNameMsg, model Model) (Model, Command) {
 func handleSetColorPalette(msg *SetColorPaletteMsg, model Model) (Model, Command) {
 	newModel := model
 	newModel.Options.ColorPalette = msg.Name
-	newModel.CurrentColorPalette = GetColorPaletteByName(msg.Name)
+	newModel.CurrentColorPalette = Palette.GetColorPaletteByName(msg.Name)
 	return newModel, NoCommand
 }
 
@@ -470,7 +471,7 @@ func handleSetTimeFormat(msg *SetTimeFormatMsg, model Model) (Model, Command) {
 // handleSetOneTurnForAllPlayers handles changes to the "One Turn For All Players" option
 func handleSetOneTurnForAllPlayers(msg *SetOneTurnForAllPlayersMsg, model Model) (Model, Command) {
 	newModel := model
-	newRules := append([]Rules{}, newModel.Options.Rules...)
+	newRules := append([]Rules.Rules{}, newModel.Options.Rules...)
 	newRule := newRules[newModel.Options.Default]
 	newRule.OneTurnForAllPlayers = msg.Value
 	newRules[newModel.Options.Default] = newRule

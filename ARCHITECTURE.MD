@@ -48,6 +48,14 @@ type View struct {
 }
 ```
 
+The view is composed of several components:
+
+1. **PlayerPanel**: Displays player information, time, and action log (`internal/app/PlayerPanel.go`)
+2. **LogPanel**: Provides scrollable log views with visual indicators (`internal/app/logpanel/logpanel.go`)
+3. **StatusPanel**: Shows the current game status (`internal/app/StatusPanel/StatusPanel.go`)
+4. **AboutPanel**: Displays information about the application (`internal/app/AboutPanel/AboutPanel.go`)
+5. **Clock**: Displays the current time (`internal/app/clock/clock.go`)
+
 The `Render` method updates the UI based on the current model:
 
 ```go

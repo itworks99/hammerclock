@@ -10,6 +10,23 @@ By default the application searches for the options file in the current director
 ./hammerclock -o /path/to/config.json
 ```
 
+# Features
+
+- Track time for multiple players
+- Track game phases for each player
+- Customizable color palettes
+- Scrollable log panels
+- Keyboard and mouse navigation
+- Customizable game rules
+
+# Components
+
+- **Player Panel**: Displays player information, time, and action log
+- **LogPanel**: Provides scrollable log views with scroll indicators
+- **StatusPanel**: Shows the current game status
+- **Clock**: Displays the current time
+- **AboutPanel**: Displays information about the application
+
 # Configuration
 
 The configuration file is a JSON file that contains the following fields:

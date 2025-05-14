@@ -16,8 +16,8 @@ func TimeFormat(option string) string {
 	return "15:04:05"
 }
 
-// DisplayClock displays the current time in the specified format.
-func DisplayClock(format string, color tcell.Color) *tview.TextView {
+// Display displays the current time in the specified format.
+func Display(format string, color tcell.Color) *tview.TextView {
 	hClock := tview.NewTextView().
 		SetTextAlign(tview.AlignRight).
 		SetDynamicColors(true).
@@ -28,4 +28,12 @@ func DisplayClock(format string, color tcell.Color) *tview.TextView {
 
 	hClock.SetText(time.Now().Format(clockFormat))
 	return hClock
+}
+
+// TimeFormatToIndex converts the time format string to an index
+func TimeFormatToIndex(format string) int {
+	if format == "AMPM" {
+		return 0
+	}
+	return 1 // Default to 24-hour format
 }

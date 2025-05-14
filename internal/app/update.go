@@ -82,13 +82,34 @@ func handleStartGame(model Model) (Model, Command) {
 	if model.GameStatus == GamePaused {
 		// Resume the game
 		model.GameStatus = GameInProgress
+		
+		// Log action for active player(s)
+		for _, player := range model.Players {
+			if player.IsTurn {
+				AddLogEntry(player, "Game resumed (Turn %d)", player.TurnCount)
+			}
+		}
 	} else if model.GameStatus == GameInProgress {
 		// Pause the game
 		model.GameStatus = GamePaused
+		
+		// Log action for active player(s)
+		for _, player := range model.Players {
+			if player.IsTurn {
+				AddLogEntry(player, "Game paused (Turn %d)", player.TurnCount)
+			}
+		}
 	} else {
 		// Start the game if not already started
 		model.GameStatus = GameInProgress
 		model.GameStarted = true
+		
+		// Log action for active player(s)
+		for _, player := range model.Players {
+			if player.IsTurn {
+				AddLogEntry(player, "Game started (Turn %d)", player.TurnCount)
+			}
+		}
 	}
 
 	return model, NoCommand
@@ -96,11 +117,25 @@ func handleStartGame(model Model) (Model, Command) {
 
 // handleSwitchTurns handles the SwitchTurnsMsg
 func handleSwitchTurns(model Model) (Model, Command) {
+	// Log for currently active players that their turn is ending
+	for _, player := range model.Players {
+		if player.IsTurn {
+			AddLogEntry(player, "Turn %d ended", player.TurnCount)
+		}
+	}
+
 	// Switch turns
 	for _, player := range model.Players {
 		player.IsTurn = !player.IsTurn
 		if player.IsTurn {
+			// Increment turn count when a player's turn begins
+			player.TurnCount++
 			player.CurrentPhase = 0
+			// Log for newly active players that their turn is starting
+			AddLogEntry(player, "Turn %d started", player.TurnCount)
+			if len(model.Phases) > 0 {
+				AddLogEntry(player, "Turn %d - Entered phase: %s", player.TurnCount, model.Phases[0])
+			}
 		}
 	}
 
@@ -117,7 +152,14 @@ func handleNextPhase(model Model) (Model, Command) {
 	// Move forward in the phase
 	for _, player := range model.Players {
 		if player.IsTurn && player.CurrentPhase < len(model.Phases)-1 {
+			oldPhase := player.CurrentPhase
 			player.CurrentPhase = player.CurrentPhase + 1
+			
+			// Log the phase change
+			AddLogEntry(player, "Turn %d - Moved from phase: %s to phase: %s", 
+				player.TurnCount,
+				model.Phases[oldPhase], 
+				model.Phases[player.CurrentPhase])
 		}
 	}
 
@@ -134,7 +176,14 @@ func handlePrevPhase(model Model) (Model, Command) {
 	// Move backward in the phase
 	for _, player := range model.Players {
 		if player.IsTurn && player.CurrentPhase > 0 {
+			oldPhase := player.CurrentPhase
 			player.CurrentPhase = player.CurrentPhase - 1
+			
+			// Log the phase change
+			AddLogEntry(player, "Turn %d - Moved from phase: %s to phase: %s", 
+				player.TurnCount,
+				model.Phases[oldPhase], 
+				model.Phases[player.CurrentPhase])
 		}
 	}
 
@@ -184,7 +233,16 @@ func handleTick(model Model) (Model, Command) {
 	if model.GameStarted && model.GameStatus == GameInProgress {
 		for _, player := range model.Players {
 			if player.IsTurn {
+				oldTimeElapsed := player.TimeElapsed
 				player.TimeElapsed += 1 * time.Second
+				
+				// Log time milestone every minute
+				if oldTimeElapsed.Minutes() < player.TimeElapsed.Minutes() {
+					minutes := int(player.TimeElapsed.Minutes())
+					if minutes > 0 && minutes % 1 == 0 {
+						AddLogEntry(player, "Turn %d - Time elapsed: %d minute(s)", player.TurnCount, minutes)
+					}
+				}
 			}
 		}
 	}

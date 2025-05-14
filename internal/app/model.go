@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -25,7 +26,9 @@ type Player struct {
 	TimeElapsed  time.Duration
 	IsTurn       bool
 	CurrentPhase int
+	TurnCount    int      // Counter to track number of turns completed
 	ArmyList     []Unit
+	ActionLog    []string // Log of player actions during the game
 }
 
 // Unit represents a unit in a player's army
@@ -222,6 +225,13 @@ var ChessRules = Rules{
 	OneTurnForAllPlayers: true,
 }
 
+// AddLogEntry adds a log entry to a player's action log
+func AddLogEntry(player *Player, format string, args ...interface{}) {
+	timestamp := time.Now().Format("15:04:05")
+	logEntry := fmt.Sprintf("[%s] %s", timestamp, fmt.Sprintf(format, args...))
+	player.ActionLog = append(player.ActionLog, logEntry)
+}
+
 // NewModel creates a new model with default values
 func NewModel() Model {
 	// Initialize with default options
@@ -236,6 +246,14 @@ func NewModel() Model {
 			TimeElapsed:  0,
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
+			ActionLog:    []string{}, // Initialize empty action log
+		}
+		
+		// Add initial log entry
+		if i == 0 {
+			AddLogEntry(players[i], "Player initialized as active player")
+		} else {
+			AddLogEntry(players[i], "Player initialized")
 		}
 	}
 

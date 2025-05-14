@@ -57,6 +57,15 @@ func main() {
 			TimeElapsed:  0,
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
+			TurnCount:    0,
+			ActionLog:    []string{}, // Initialize empty action log
+		}
+		
+		// Add initial player log message
+		if i == 0 {
+			app.AddLogEntry(players[i], "Player initialized as active player (Turn %d)", players[i].TurnCount)
+		} else {
+			app.AddLogEntry(players[i], "Player initialized (Turn %d)", players[i].TurnCount)
 		}
 	}
 	model.Players = players

@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
 	"hammerclock/internal/app/about"
 	"hammerclock/internal/app/clock"
 	"hammerclock/internal/app/statusbar"
+
+	"github.com/gdamore/tcell/v2"
 
 	"github.com/rivo/tview"
 )
@@ -100,7 +101,7 @@ func NewView(model *Model) *View {
 	mainFlex.AddItem(playerPanelsContainer, 0, 1, false)
 
 	// Create statusbar panel
-	statusPanel := statusbar.Status(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
+	statusPanel := statusbar.StatusBar(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
 
 	// Add statusbar panels to the main layout
 	mainFlex.AddItem(statusPanel, 3, 0, false)
@@ -202,6 +203,9 @@ func applyTviewStyles(palette ColorPalette) {
 func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	panel := tview.NewFlex().SetDirection(tview.FlexRow)
 
+	// Create upper cell flex that will contain player name, time, and phase
+	upperCell := tview.NewFlex().SetDirection(tview.FlexRow)
+	
 	// Create a box for the player name
 	nameBox := tview.NewTextView().
 		SetText("Player: " + player.Name).
@@ -212,42 +216,105 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed)).
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
-
+    
+	// Create a horizontal line divider
+	horizontalLine := tview.NewTextView().
+		SetTextAlign(tview.AlignCenter).
+		SetTextColor(model.CurrentColorPalette.DimWhite)
+	
+	// Create a string of unicode box drawing characters to form a line
+	lineWidth := 30 // Adjust based on expected panel width
+	lineRune := '─'  // Unicode box drawing character for horizontal line
+	line := strings.Repeat(string(lineRune), lineWidth)
+	horizontalLine.SetText(line)
+	
 	phaseBox := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
+	
 	// Create a box for the current phase
-	if model.Options.Rules[model.Options.Default].OneTurnForAllPlayers != true {
+	if !model.Options.Rules[model.Options.Default].OneTurnForAllPlayers {
 		phaseBox = tview.NewTextView().
-			SetText(fmt.Sprintf("Phase: %s", model.Phases[player.CurrentPhase])).
+			SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase])).
+			SetTextAlign(tview.AlignCenter).
+			SetTextColor(model.CurrentColorPalette.White)
+	} else {
+		phaseBox = tview.NewTextView().
+			SetText(fmt.Sprintf("Turn: %d", player.TurnCount)).
 			SetTextAlign(tview.AlignCenter).
 			SetTextColor(model.CurrentColorPalette.White)
 	}
-	// Add the boxes to the panel
-	panel.AddItem(nameBox, 1, 1, false).
+	
+	// Add content to the upper cell
+	upperCell.AddItem(nameBox, 1, 1, false).
 		AddItem(tview.NewBox(), 1, 1, false). // Spacer
 		AddItem(timeBox, 1, 1, false).
-		AddItem(tview.NewBox(), 1, 1, false). // Spacer
+		AddItem(horizontalLine, 1, 0, false). // Horizontal line divider
 		AddItem(phaseBox, 1, 1, false).
-		AddItem(tview.NewBox(), 0, 1, false) // Flexible spacer at the bottom
+		AddItem(tview.NewBox(), 0, 1, false) // Flexible spacer
+	
+	// Create lower cell flex that will contain the action log
+	lowerCell := tview.NewFlex().SetDirection(tview.FlexRow)
+	
+	// Create a title for the action log
+	logTitle := tview.NewTextView().
+		SetTextAlign(tview.AlignCenter).
+		SetText("Action Log").
+		SetTextColor(model.CurrentColorPalette.White)
+	
+	// Create a text view for the action log
+	logView := tview.NewTextView().
+		SetTextAlign(tview.AlignLeft).
+		SetDynamicColors(true)
+
+	// Set auto-scroll behavior when content changes
+	logView.SetChangedFunc(func() {
+		logView.ScrollToEnd()
+	})
+
+	// Add any existing log entries
+	if len(player.ActionLog) > 0 {
+		var logText strings.Builder
+		for _, entry := range player.ActionLog {
+			logText.WriteString(entry + "\n")
+		}
+		logView.SetText(logText.String())
+	}
+	
+	// Add content to the lower cell
+	lowerCell.AddItem(logTitle, 1, 0, false)
+	lowerCell.AddItem(logView, 0, 1, false) // Flexible sizing for log
+	
+	// Get border color based on the player
+	var borderColor tcell.Color
+	switch color {
+	case "blue":
+		borderColor = model.CurrentColorPalette.Blue
+	case "yellow":
+		borderColor = model.CurrentColorPalette.Yellow
+	case "green":
+		borderColor = model.CurrentColorPalette.Green
+	case "red":
+		borderColor = model.CurrentColorPalette.Red
+	default:
+		borderColor = model.CurrentColorPalette.Black
+	}
+	
+	// Add the upper cell to the main panel (fixed size for player info)
+	panel.AddItem(upperCell, 7, 0, false)
+	
+	// Add the lower cell to the main panel with action log (flexible size to fill remaining space)
+	panel.AddItem(lowerCell, 0, 3, false)
 
 	// Set the border and background
 	panel.SetBorder(true)
 	panel.SetBackgroundColor(model.CurrentColorPalette.Black)
 
 	// Set the border color based on the player
-	switch color {
-	case "blue":
-		panel.SetBorderColor(model.CurrentColorPalette.Blue)
-	case "yellow":
-		panel.SetBorderColor(model.CurrentColorPalette.Yellow)
-	case "green":
-		panel.SetBorderColor(model.CurrentColorPalette.Green)
-	case "red":
-		panel.SetBorderColor(model.CurrentColorPalette.Red)
-	default:
-		panel.SetBorderColor(model.CurrentColorPalette.Black)
-	}
+	panel.SetBorderColor(borderColor)
+	
+	// Set the text color of the horizontal divider to match the border color
+	horizontalLine.SetTextColor(borderColor)
 
 	return panel
 }
@@ -313,19 +380,23 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 // updatePlayerPanels updates the player panels with current information
 func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Model) {
 	for i, player := range players {
-		// Get the text views
-		nameBox := playerPanels[i].GetItem(0).(*tview.TextView)
-		timeBox := playerPanels[i].GetItem(2).(*tview.TextView)
-		phaseBox := playerPanels[i].GetItem(4).(*tview.TextView)
+		// Get the upper cell
+		upperCell := playerPanels[i].GetItem(0).(*tview.Flex)
+		
+		// Get the text views from upper cell
+		nameBox := upperCell.GetItem(0).(*tview.TextView)
+		timeBox := upperCell.GetItem(2).(*tview.TextView)
+		horizontalLine := upperCell.GetItem(3).(*tview.TextView)
+		phaseBox := upperCell.GetItem(4).(*tview.TextView)
 
 		// Update time elapsed
 		timeBox.SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed))
 
 		// Update current phase
 		if model.Options.Rules[model.Options.Default].OneTurnForAllPlayers != true {
-			phaseBox.SetText(fmt.Sprintf("Phase: %s", model.Phases[player.CurrentPhase]))
+			phaseBox.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
 		} else {
-			phaseBox.SetText("")
+			phaseBox.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
 		}
 
 		// Update title and text color based on game state and turn
@@ -349,6 +420,26 @@ func updatePlayerPanels(players []*Player, playerPanels []*tview.Flex, model *Mo
 			nameBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			timeBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			phaseBox.SetTextColor(model.CurrentColorPalette.DimWhite)
+		}
+		
+		// Set the horizontal line color to match the border
+		horizontalLine.SetTextColor(playerPanels[i].GetBorderColor())
+		
+		// Update action log if it exists
+		lowerCell := playerPanels[i].GetItem(1).(*tview.Flex)
+		if lowerCell != nil && lowerCell.GetItemCount() > 1 {
+			logView := lowerCell.GetItem(1).(*tview.TextView)
+			
+			// Update the log text
+			var logText strings.Builder
+			for _, entry := range player.ActionLog {
+				logText.WriteString(entry + "\n")
+			}
+			
+			// Only update if content has changed
+			if logText.String() != logView.GetText(false) {
+				logView.SetText(logText.String())
+			}
 		}
 	}
 }
@@ -539,7 +630,7 @@ func createPlayerNameFields(model *Model, currentRulesetContentBox *tview.Flex) 
 		model.Options.PlayerNames = append(model.Options.PlayerNames, make([]string, model.Options.PlayerCount-len(model.Options.PlayerNames))...)
 	}
 
-	for i := 0; i < model.Options.PlayerCount; i++ {
+	for i := range model.Options.PlayerCount {
 		label := ""
 		if i == 0 {
 			label = "Player names: "

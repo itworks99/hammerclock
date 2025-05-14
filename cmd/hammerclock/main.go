@@ -34,6 +34,7 @@ func main() {
 	// Parse command line flags
 	optionsFileFlag := flag.String("o", hammerclockConfig.DefaultOptionsFilename, "Path to the options file")
 	flag.Usage = func() {
+		//goland:noinspection GoUnhandledErrorResult
 		fmt.Fprintln(os.Stderr, cliUsage)
 	}
 	flag.Parse()

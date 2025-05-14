@@ -40,63 +40,6 @@ func CreateLogContainer(logView *tview.TextView) *tview.Flex {
 
 // SetupLogViewInputHandling configures keyboard and mouse input for scrolling a log view.
 func SetupLogViewInputHandling(logView *tview.TextView) {
-	// Store a reference to the original input capture function
-	originalInputCapture := logView.GetInputCapture()
-
-	// Set up keyboard input handling for scrolling
-	logView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyUp:
-			// Scroll up
-			row, _ := logView.GetScrollOffset()
-			if row > 0 {
-				logView.ScrollTo(row-1, 0)
-			}
-			return nil
-		case tcell.KeyDown:
-			// Scroll down
-			row, _ := logView.GetScrollOffset()
-			totalLines := logView.GetWrappedLineCount()
-			if row < totalLines-1 {
-				logView.ScrollTo(row+1, 0)
-			}
-			return nil
-		case tcell.KeyPgUp:
-			// Page up (scroll up by 5 lines)
-			row, _ := logView.GetScrollOffset()
-			newRow := row - 5
-			if newRow < 0 {
-				newRow = 0
-			}
-			logView.ScrollTo(newRow, 0)
-			return nil
-		case tcell.KeyPgDn:
-			// Page down (scroll down by 5 lines)
-			row, _ := logView.GetScrollOffset()
-			totalLines := logView.GetWrappedLineCount()
-			newRow := row + 5
-			if newRow > totalLines-1 {
-				newRow = totalLines - 1
-			}
-			logView.ScrollTo(newRow, 0)
-			return nil
-		case tcell.KeyHome:
-			// Scroll to top
-			logView.ScrollToBeginning()
-			return nil
-		case tcell.KeyEnd:
-			// Scroll to bottom
-			logView.ScrollToEnd()
-			return nil
-		}
-
-		// Pass other keys to the original input capture function if it exists
-		if originalInputCapture != nil {
-			return originalInputCapture(event)
-		}
-		return event
-	})
-
 	// Set up mouse handling for scrolling
 	logView.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		switch action {
@@ -115,6 +58,8 @@ func SetupLogViewInputHandling(logView *tview.TextView) {
 				logView.ScrollTo(row+1, 0)
 			}
 			return action, nil // Consume the event
+		default:
+			// Handle other mouse events
 		}
 
 		// Pass other mouse events through

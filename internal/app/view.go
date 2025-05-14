@@ -207,11 +207,12 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	panel := tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create upper cell flex that will contain player name, time, and phase
-	upperCell := tview.NewFlex().SetDirection(tview.FlexRow)
+	upperPanelHalf := tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create a box for the player name
 	nameBox := tview.NewTextView().
-		SetText("Player: " + player.Name).
+		SetText("\nPlayer: " + player.Name).
+		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
 
 	// Create a box for the time elapsed
@@ -239,11 +240,12 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	if !model.Options.Rules[model.Options.Default].OneTurnForAllPlayers {
 		phaseBox.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
 	} else {
+		// No phases, just show the turn count
 		phaseBox.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
 	}
 
 	// Add content to the upper cell
-	upperCell.AddItem(nameBox, 1, 1, false).
+	upperPanelHalf.AddItem(nameBox, 2, 1, false).
 		AddItem(tview.NewBox(), 1, 1, false). // Spacer
 		AddItem(timeBox, 1, 1, false).
 		AddItem(horizontalLine, 1, 0, false). // Horizontal line divider
@@ -251,12 +253,12 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		AddItem(tview.NewBox(), 0, 1, false) // Flexible spacer
 
 	// Create lower cell flex that will contain the action log
-	lowerCell := tview.NewFlex().SetDirection(tview.FlexRow)
+	lowerPanelHalf := tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create a title for the action log
 	logTitle := tview.NewTextView().
-		SetTextAlign(tview.AlignCenter).
-		SetText("Action Log").
+		SetTextAlign(tview.AlignLeft).
+		SetText("\nAction Log:").
 		SetTextColor(model.CurrentColorPalette.White)
 
 	// Create a text view for the action log
@@ -279,8 +281,8 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	}
 
 	// Add content to the lower cell
-	lowerCell.AddItem(logTitle, 1, 0, false)
-	lowerCell.AddItem(logView, 0, 1, false) // Flexible sizing for log
+	lowerPanelHalf.AddItem(logTitle, 3, 0, false)
+	lowerPanelHalf.AddItem(logView, 0, 1, false) // Flexible sizing for log
 
 	// Get border color based on the player
 	var borderColor tcell.Color
@@ -298,10 +300,10 @@ func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	}
 
 	// Add the upper cell to the main panel (fixed size for player info)
-	panel.AddItem(upperCell, 7, 0, false)
+	panel.AddItem(upperPanelHalf, 7, 0, false)
 
 	// Add the lower cell to the main panel with action log (flexible size to fill remaining space)
-	panel.AddItem(lowerCell, 0, 3, false)
+	panel.AddItem(lowerPanelHalf, 0, 3, false)
 
 	// Set the border and background
 	panel.SetBorder(true)

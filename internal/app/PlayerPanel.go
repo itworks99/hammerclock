@@ -16,7 +16,7 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	upper := tview.NewFlex().SetDirection(tview.FlexRow)
 	lower := tview.NewFlex().SetDirection(tview.FlexRow)
 
-	name := tview.NewTextView().
+	playerName := tview.NewTextView().
 		SetText("\nPlayer: " + player.Name).
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
@@ -24,28 +24,28 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed)).
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
-	line := tview.NewTextView().
+	horizontalDivider := tview.NewTextView().
 		SetText(strings.Repeat("─", 30)).
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.DimWhite)
-	phase := tview.NewTextView().
+	currentTurnAndPhase := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White)
 
 	setPhaseText := func() {
 		if !model.Options.Rules[model.Options.Default].OneTurnForAllPlayers {
-			phase.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
+			currentTurnAndPhase.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
 		} else {
-			phase.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
+			currentTurnAndPhase.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
 		}
 	}
 	setPhaseText()
 
-	upper.AddItem(name, 2, 1, false).
+	upper.AddItem(playerName, 2, 1, false).
 		AddItem(tview.NewBox(), 1, 1, false).
 		AddItem(elapsedTime, 1, 1, false).
-		AddItem(line, 1, 0, false).
-		AddItem(phase, 1, 1, false).
+		AddItem(horizontalDivider, 1, 0, false).
+		AddItem(currentTurnAndPhase, 1, 1, false).
 		AddItem(tview.NewBox(), 0, 1, false)
 
 	logTitle := tview.NewTextView().
@@ -53,7 +53,7 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		SetText("\nAction Log:").
 		SetTextColor(model.CurrentColorPalette.White)
 
-	// Use the logpanel package to create a scrollable log view
+	// Creating a scrollable log view
 	logView := LogPanel.CreateLogView()
 
 	// Set initial content if any exists
@@ -88,43 +88,43 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	panel.SetBorder(true).
 		SetBackgroundColor(model.CurrentColorPalette.Black).
 		SetBorderColor(borderColor)
-	line.SetTextColor(borderColor)
+	horizontalDivider.SetTextColor(borderColor)
 	return panel
 }
 
 // UpdatePlayerPanels updates the player panels with the current player data
 func updatePlayerPanels(players []*Player, panels []*tview.Flex, model *Model) {
 	for i, player := range players {
-		upper := panels[i].GetItem(0).(*tview.Flex)
-		name := upper.GetItem(0).(*tview.TextView)
-		playerTime := upper.GetItem(2).(*tview.TextView)
-		line := upper.GetItem(3).(*tview.TextView)
-		phase := upper.GetItem(4).(*tview.TextView)
+		currentPlayerPanel := panels[i].GetItem(0).(*tview.Flex)
+		gameInfoBox := currentPlayerPanel.GetItem(0).(*tview.TextView)
+		elapsedTimeBox := currentPlayerPanel.GetItem(2).(*tview.TextView)
+		horizontalDivider := currentPlayerPanel.GetItem(3).(*tview.TextView)
+		currentTurnAndPhase := currentPlayerPanel.GetItem(4).(*tview.TextView)
 
-		playerTime.SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed))
+		elapsedTimeBox.SetText(fmt.Sprintf("Time Elapsed: %v", player.TimeElapsed))
 		if !model.Options.Rules[model.Options.Default].OneTurnForAllPlayers {
-			phase.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
+			currentTurnAndPhase.SetText(fmt.Sprintf("Turn: %d | Phase: %s", player.TurnCount, model.Phases[player.CurrentPhase]))
 		} else {
-			phase.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
+			currentTurnAndPhase.SetText(fmt.Sprintf("Turn: %d", player.TurnCount))
 		}
 
 		if !model.GameStarted {
 			panels[i].SetTitle("")
-			name.SetTextColor(model.CurrentColorPalette.DimWhite)
-			playerTime.SetTextColor(model.CurrentColorPalette.DimWhite)
-			phase.SetTextColor(model.CurrentColorPalette.DimWhite)
+			gameInfoBox.SetTextColor(model.CurrentColorPalette.DimWhite)
+			elapsedTimeBox.SetTextColor(model.CurrentColorPalette.DimWhite)
+			currentTurnAndPhase.SetTextColor(model.CurrentColorPalette.DimWhite)
 		} else if player.IsTurn {
 			panels[i].SetTitle(" ACTIVE TURN ")
-			name.SetTextColor(model.CurrentColorPalette.White)
-			playerTime.SetTextColor(model.CurrentColorPalette.White)
-			phase.SetTextColor(model.CurrentColorPalette.White)
+			gameInfoBox.SetTextColor(model.CurrentColorPalette.White)
+			elapsedTimeBox.SetTextColor(model.CurrentColorPalette.White)
+			currentTurnAndPhase.SetTextColor(model.CurrentColorPalette.White)
 		} else {
 			panels[i].SetTitle("")
-			name.SetTextColor(model.CurrentColorPalette.DimWhite)
-			playerTime.SetTextColor(model.CurrentColorPalette.DimWhite)
-			phase.SetTextColor(model.CurrentColorPalette.DimWhite)
+			gameInfoBox.SetTextColor(model.CurrentColorPalette.DimWhite)
+			elapsedTimeBox.SetTextColor(model.CurrentColorPalette.DimWhite)
+			currentTurnAndPhase.SetTextColor(model.CurrentColorPalette.DimWhite)
 		}
-		line.SetTextColor(panels[i].GetBorderColor())
+		horizontalDivider.SetTextColor(panels[i].GetBorderColor())
 
 		lower := panels[i].GetItem(1).(*tview.Flex)
 		if lower != nil && lower.GetItemCount() > 1 {

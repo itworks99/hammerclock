@@ -135,7 +135,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], "Game resumed (Turn %d)", player.TurnCount)
+				AddLogEntry(newModel.Players[i], "Game resumed", player.TurnCount)
 			}
 		}
 	} else if model.GameStatus == GameInProgress {
@@ -145,7 +145,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], "Game paused (Turn %d)", player.TurnCount)
+				AddLogEntry(newModel.Players[i], "Game paused", player.TurnCount)
 			}
 		}
 	} else {
@@ -156,7 +156,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], "Game started (Turn %d)", player.TurnCount)
+				AddLogEntry(newModel.Players[i], "Game started", player.TurnCount)
 			}
 		}
 	}
@@ -331,16 +331,7 @@ func handleTick(model Model) (Model, Command) {
 			newPlayers[i] = &newPlayer
 
 			if player.IsTurn {
-				oldTimeElapsed := player.TimeElapsed
 				newPlayers[i].TimeElapsed += 1 * time.Second
-
-				// Log time milestone every minute
-				if oldTimeElapsed.Minutes() < newPlayers[i].TimeElapsed.Minutes() {
-					minutes := int(newPlayers[i].TimeElapsed.Minutes())
-					if minutes > 0 {
-						AddLogEntry(newPlayers[i], "Turn %d - Time elapsed: %d minute(s)", player.TurnCount, minutes)
-					}
-				}
 			}
 		}
 

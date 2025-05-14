@@ -1,9 +1,10 @@
 package app
 
 import (
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"time"
 )
 
 // Message represents a message that can be sent to the Update function

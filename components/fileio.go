@@ -91,7 +91,7 @@ func SaveOptions(options app.Options, filename string, overwrite bool) error {
 			// File exists
 			return fmt.Errorf("file '%s' already exists and overwrite is set to false", filename)
 		} else if !os.IsNotExist(err) {
-			// Some other error occurred when checking file status
+			// Some other error occurred when checking file statusbar
 			return fmt.Errorf("error checking if file '%s' exists: %w", filename, err)
 		}
 	}

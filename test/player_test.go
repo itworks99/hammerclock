@@ -1,9 +1,10 @@
 package test
 
 import (
-	"hammerclock/internal/app"
 	"testing"
 	"time"
+
+	"hammerclock/internal/app"
 )
 
 // TestPlayerFunctionality tests the Player struct functionality

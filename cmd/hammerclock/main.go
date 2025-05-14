@@ -27,6 +27,7 @@ Examples:
   hammerclock -o myOptions.json   # Run with custom options
 `
 
+// main function initializes the application, loads options, and starts the main loop
 func main() {
 	// Parse command line flags
 	optionsFileFlag := flag.String("o", hammerclockConfig.DefaultOptionsFilename, "Path to the options file")

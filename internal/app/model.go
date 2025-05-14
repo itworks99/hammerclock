@@ -133,12 +133,21 @@ var KillTeamPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(5, 5, 5),       // Shadow Black
 }
 
+// DefaultPlayerNames Generate default player names
+func DefaultPlayerNames() []string {
+	var playerNames []string
+	for i := 0; i < hammerclockConfig.DefaultPlayerCount; i++ {
+		playerNames = append(playerNames, hammerclockConfig.DefaultPlayerPrefix+" "+string(rune(i+1)))
+	}
+	return playerNames
+}
+
 // DefaultOptions Default options
 var DefaultOptions = Options{
 	Default:      0,
 	Rules:        allRules,
 	PlayerCount:  hammerclockConfig.DefaultPlayerCount,
-	PlayerNames:  []string{"Player 1", "Player 2"},
+	PlayerNames:  DefaultPlayerNames(),
 	ColorPalette: hammerclockConfig.DefaultColorPalette,
 	TimeFormat:   "AMPM",
 }

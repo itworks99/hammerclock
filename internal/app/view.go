@@ -8,7 +8,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"hammerclock/internal/app/about"
-	"hammerclock/internal/app/status"
+	"hammerclock/internal/app/clock"
+	"hammerclock/internal/app/statusbar"
 
 	"github.com/rivo/tview"
 )
@@ -31,15 +32,6 @@ type View struct {
 type MenuOption struct {
 	Key         string
 	Description string
-}
-
-// ClockLayout determines the clock format string based on the model's time format setting (AMPM or 24-hour).
-func ClockLayout(model *Model) string {
-	// Determine the clock layout based on the options
-	if model.Options.TimeFormat == "AMPM" {
-		return "03:04:05 PM"
-	}
-	return "15:04:05"
 }
 
 // NewView creates a new view with the given model
@@ -81,15 +73,7 @@ func NewView(model *Model) *View {
 	topFlex.AddItem(rightSpacer, 0, 1, false)
 
 	// Add a clock display to the right side
-	hClock := tview.NewTextView().
-		SetTextAlign(tview.AlignRight).
-		SetDynamicColors(true).
-		SetTextColor(model.CurrentColorPalette.White)
-
-	// Set the clock format based on the model's options
-	var clockFormat = ClockLayout(model)
-
-	hClock.SetText(time.Now().Format(clockFormat))
+	hClock := clock.DisplayClock(model.Options.TimeFormat, model.CurrentColorPalette.White)
 	topFlex.AddItem(hClock, 10, 0, false)
 
 	// Add the top flex container to the main layout
@@ -115,10 +99,10 @@ func NewView(model *Model) *View {
 	// Add player panels to the main layout
 	mainFlex.AddItem(playerPanelsContainer, 0, 1, false)
 
-	// Create status panel
-	statusPanel := status.Status(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
+	// Create statusbar panel
+	statusPanel := statusbar.Status(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
 
-	// Add status panels to the main layout
+	// Add statusbar panels to the main layout
 	mainFlex.AddItem(statusPanel, 3, 0, false)
 
 	// Create bottom menu options
@@ -132,7 +116,7 @@ func NewView(model *Model) *View {
 
 	// Add a bottom menu
 	bottomMenu := createMenuBar(instructions).SetDynamicColors(true)
-	// Initialize menu text based on the initial game status
+	// Initialize menu text based on the initial game statusbar
 	updateMenuText(bottomMenu, model.GameStatus)
 	mainFlex.AddItem(bottomMenu, 1, 0, false)
 
@@ -155,7 +139,7 @@ func (v *View) Render(model *Model) {
 	// Update player panels
 	updatePlayerPanels(model.Players, v.PlayerPanels, model)
 
-	// Update status panel
+	// Update statusbar panel
 	updateStatusPanel(v.StatusPanel, string(model.GameStatus), model)
 
 	// Update menu text
@@ -177,12 +161,12 @@ func (v *View) Render(model *Model) {
 	}
 }
 
-// updateStatusPanel updates the status panel with the current game status
+// updateStatusPanel updates the statusbar panel with the current game statusbar
 func updateStatusPanel(panel *tview.Flex, s string, model *Model) {
 	statusTextView := panel.GetItem(0).(*tview.TextView)
 	statusTextView.SetText(s)
 
-	// Set the border color based on the game status
+	// Set the border color based on the game statusbar
 	switch model.GameStatus {
 	case GameNotStarted:
 		panel.SetBorderColor(model.CurrentColorPalette.Cyan)
@@ -195,7 +179,7 @@ func updateStatusPanel(panel *tview.Flex, s string, model *Model) {
 
 // UpdateClock updates the clock display with the current time
 func (v *View) UpdateClock(model *Model) {
-	var clockLayout = ClockLayout(model)
+	var clockLayout = clock.TimeFormat(model.Options.TimeFormat)
 	v.ClockDisplay.SetText(time.Now().Format(clockLayout))
 }
 
@@ -302,7 +286,7 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 		{Key: "Q", Description: "Quit"},
 	}
 
-	// Update the description for the "S" key based on the game status
+	// Update the description for the "S" key based on the game statusbar
 	for i := range instructions {
 		if instructions[i].Key == "S" {
 			switch status {
@@ -383,9 +367,34 @@ func updateRulesetContent(model *Model, textView *tview.Flex) {
 		leftText.WriteString(fmt.Sprintf(" %d. %s\n", i+1, name.Name))
 	}
 	leftText.WriteString(fmt.Sprintf(
-		"\n [b]One Turn For All Players:[-] %t\n\n [b]Color Palette:[-] %s\n\n [b]Time Format:[-] %s\n\n",
+		"\n [b]One Turn For All Players:[-] %t\n\n [b]Color Palette:[-] %s\n",
 		model.Options.Rules[model.Options.Default].OneTurnForAllPlayers,
 		model.Options.ColorPalette,
+	))
+
+	// Inline color palette display
+	palette := model.CurrentColorPalette
+	leftText.WriteString(" [b]Palette:[-] ")
+	colorBlocks := []struct {
+		Name  string
+		Color tcell.Color
+	}{
+		{"Blue", palette.Blue},
+		{"Cyan", palette.Cyan},
+		{"White", palette.White},
+		{"DimWhite", palette.DimWhite},
+		{"Yellow", palette.Yellow},
+		{"Green", palette.Green},
+		{"Red", palette.Red},
+		{"Black", palette.Black},
+	}
+	for _, c := range colorBlocks {
+		leftText.WriteString(fmt.Sprintf("[#%06x]█[-]", uint32(c.Color.TrueColor())))
+	}
+	leftText.WriteString("\n\n")
+
+	leftText.WriteString(fmt.Sprintf(
+		" [b]Time Format:[-] %s\n\n",
 		model.Options.TimeFormat,
 	))
 
@@ -419,8 +428,6 @@ func createTextColumn(text string, color tcell.Color) *tview.TextView {
 
 // createOptionsScreen creates the options screen with various settings
 func createOptionsScreen(model *Model) *tview.Grid {
-	const pressEnterToSave = "(Press Enter to save changes):"
-
 	optionsPanel := tview.NewGrid().
 		SetRows(10).
 		SetColumns(0).
@@ -435,7 +442,7 @@ func createOptionsScreen(model *Model) *tview.Grid {
 
 	// Create dropdown for rulesets
 	rulesetBox := tview.NewDropDown().
-		SetLabel("Select rules "+pressEnterToSave).
+		SetLabel("Select rules: ").
 		SetOptions(getRulesetNames(model.Options.Rules), func(option string, index int) {
 			model.Options.Default = index
 			model.Phases = model.Options.Rules[index].Phases
@@ -446,7 +453,7 @@ func createOptionsScreen(model *Model) *tview.Grid {
 
 	// Create input field for player count
 	playerCountBox := tview.NewInputField().
-		SetLabel("Players " + pressEnterToSave).
+		SetLabel("Players: ").
 		SetText(strconv.Itoa(model.Options.PlayerCount)).
 		SetLabelColor(model.CurrentColorPalette.White).
 		SetFieldWidth(1).
@@ -457,7 +464,7 @@ func createOptionsScreen(model *Model) *tview.Grid {
 		})
 
 	// Create player name input fields
-	playerNamesBox := createPlayerNameFields(model)
+	playerNamesBox := createPlayerNameFields(model, currentRulesetContentBox)
 
 	// Create dropdown for color palettes
 	colorPaletteBox := tview.NewDropDown().
@@ -475,6 +482,7 @@ func createOptionsScreen(model *Model) *tview.Grid {
 		SetLabel("Select time format: ").
 		SetOptions([]string{"AMPM", "24-hour"}, func(option string, index int) {
 			model.Options.TimeFormat = option
+			updateRulesetContent(model, currentRulesetContentBox)
 		}).
 		SetCurrentOption(timeFormatToIndex(model.Options.TimeFormat)).
 		SetLabelColor(model.CurrentColorPalette.White)
@@ -504,7 +512,7 @@ func createOptionsScreen(model *Model) *tview.Grid {
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(model.CurrentColorPalette.White).
 		SetDynamicColors(true).
-		SetText("\n\n [b]Press [-]O[b] to return to the main screen")
+		SetText("[b]Use mouse to change setting\n Press [-]O[b] to return to the main screen")
 
 	updateRulesetContent(model, currentRulesetContentBox)
 
@@ -520,7 +528,7 @@ func createOptionsScreen(model *Model) *tview.Grid {
 }
 
 // createPlayerNameFields creates input fields for player names
-func createPlayerNameFields(model *Model) *tview.Grid {
+func createPlayerNameFields(model *Model, currentRulesetContentBox *tview.Flex) *tview.Grid {
 	playerNamesFlex := tview.NewGrid().
 		SetRows(1).
 		SetColumns(0).
@@ -534,7 +542,7 @@ func createPlayerNameFields(model *Model) *tview.Grid {
 	for i := 0; i < model.Options.PlayerCount; i++ {
 		label := ""
 		if i == 0 {
-			label = "Player names:"
+			label = "Player names: "
 		}
 		playerNamesFlex.AddItem(
 			tview.NewInputField().
@@ -545,6 +553,7 @@ func createPlayerNameFields(model *Model) *tview.Grid {
 				SetChangedFunc(func(idx int) func(string) {
 					return func(text string) {
 						model.Options.PlayerNames[idx] = strings.TrimSpace(text)
+						updateRulesetContent(model, currentRulesetContentBox)
 					}
 				}(i)),
 			1, i, 1, 1, 0, 0, false,

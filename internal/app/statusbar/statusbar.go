@@ -1,15 +1,15 @@
-package status
+package statusbar
 
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
-// Status creates a panel that displays the game status
+// Status creates a panel that displays the game statusbar
 func Status(status string, borderColor tcell.Color, backgroundColor tcell.Color) *tview.Flex {
 	statusPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
-	// Create status text view
+	// Create statusbar text view
 	statusTextView := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetText(status)

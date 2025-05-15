@@ -6,6 +6,7 @@ import (
 	"hammerclock/components/hammerclock/Palette"
 	"hammerclock/components/hammerclock/Rules"
 	"hammerclock/components/hammerclock/fileio"
+	logpanel "hammerclock/internal/app/LogPanel"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -222,6 +223,9 @@ func handleEndGame(model Model) (Model, Command) {
 			newModel.Players[i].TimeElapsed = 0
 			newModel.Players[i].TurnCount = 0
 			newModel.Players[i].CurrentPhase = 0
+			
+			// Clear the action log
+			newModel.Players[i].ActionLog = []logpanel.LogEntry{}
 			
 			// Keep turn state of player 1
 			if i == 0 {

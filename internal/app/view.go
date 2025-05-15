@@ -119,6 +119,7 @@ func updateStatusPanel(panel *tview.Flex, status string, model *Model) {
 func updateMenuText(menu *tview.TextView, status GameStatus) {
 	instructions := []MenuBar.MenuOption{
 		{Key: "S", Description: "Start Game"},
+		{Key: "E", Description: "End Game"},
 		{Key: "SPACE", Description: "Switch Turns"},
 		{Key: "P", Description: "Next Phase"},
 		{Key: "B", Description: "Previous Phase"},
@@ -141,7 +142,18 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 		if i > 0 {
 			menuString.WriteString("   ")
 		}
-		menuString.WriteString("[white]" + option.Key + "[d:] " + option.Description)
+		
+		// Special case for End Game option - dimmed and only visible when game started
+		if option.Key == "E" {
+			if status == GameNotStarted {
+				// Skip the End Game option when game hasn't started
+				continue
+			}
+			// Show dimmed when game is started
+			menuString.WriteString("[#888888]" + option.Key + "[d:] " + option.Description)
+		} else {
+			menuString.WriteString("[white]" + option.Key + "[d:] " + option.Description)
+		}
 	}
 	menu.SetText(menuString.String())
 }

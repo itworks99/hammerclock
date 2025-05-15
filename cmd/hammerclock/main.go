@@ -135,7 +135,22 @@ func main() {
 				if cmd != nil {
 					go func() {
 						if resultMsg := cmd(); resultMsg != nil {
-							msgChan <- resultMsg
+							// Special handling for ShowModalMsg
+							if showModal, ok := resultMsg.(*app.ShowModalMsg); ok {
+								view.App.QueueUpdateDraw(func() {
+									switch showModal.Type {
+									case "EndGameConfirm":
+										modal := app.CreateEndGameConfirmationModal(view, &model)
+										view.ShowConfirmationModal(modal)
+									}
+								})
+							} else if _, ok := resultMsg.(*app.RestoreMainUIMsg); ok {
+								view.App.QueueUpdateDraw(func() {
+									view.RestoreMainUI()
+								})
+							} else {
+								msgChan <- resultMsg
+							}
 						}
 					}()
 				}

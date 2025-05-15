@@ -46,6 +46,25 @@ type KeyPressMsg struct {
 	Rune rune
 }
 
+// EndGameMsg is sent when the user wants to end the current game
+type EndGameMsg struct{}
+
+// EndGameConfirmMsg is sent when the user confirms or cancels ending the game
+type EndGameConfirmMsg struct {
+	Confirmed bool
+}
+
+// ShowEndGameConfirmMsg is sent to show the end game confirmation dialog
+type ShowEndGameConfirmMsg struct{}
+
+// ShowModalMsg is sent to show a modal dialog
+type ShowModalMsg struct {
+	Type string
+}
+
+// RestoreMainUIMsg is sent to restore the main UI after a modal dialog
+type RestoreMainUIMsg struct{}
+
 // SetRulesetMsg is sent when the user selects a different ruleset
 type SetRulesetMsg struct {
 	Index int
@@ -95,6 +114,12 @@ func Update(msg Message, model Model) (Model, Command) {
 	switch msg := msg.(type) {
 	case *StartGameMsg:
 		return handleStartGame(model)
+	case *EndGameMsg:
+		return handleEndGame(model)
+	case *EndGameConfirmMsg:
+		return handleEndGameConfirm(msg, model)
+	case *ShowEndGameConfirmMsg:
+		return handleShowEndGameConfirm(model)
 	case *SwitchTurnsMsg:
 		return handleSwitchTurns(model)
 	case *NextPhaseMsg:
@@ -107,6 +132,8 @@ func Update(msg Message, model Model) (Model, Command) {
 		return handleShowAbout(model)
 	case *ShowMainScreenMsg:
 		return handleShowMainScreen(model)
+	case *RestoreMainUIMsg:
+		return model, NoCommand
 	case *TickMsg:
 		return handleTick(model)
 	case *KeyPressMsg:
@@ -175,6 +202,66 @@ func handleStartGame(model Model) (Model, Command) {
 	}
 
 	return newModel, NoCommand
+}
+
+// handleEndGame handles the EndGameMsg
+func handleEndGame(model Model) (Model, Command) {
+	// Create a copy of the model to avoid modifying the original
+	newModel := model
+
+	// Only handle if the game was started
+	if model.GameStarted {
+		// Reset game state
+		newModel.GameStatus = GameNotStarted
+		newModel.GameStarted = false
+		newModel.TotalGameTime = 0
+
+		// Log action for players
+		for i, _ := range model.Players {
+			// Reset player state
+			newModel.Players[i].TimeElapsed = 0
+			newModel.Players[i].TurnCount = 0
+			newModel.Players[i].CurrentPhase = 0
+			
+			// Keep turn state of player 1
+			if i == 0 {
+				newModel.Players[i].IsTurn = true
+				AddLogEntry(newModel.Players[i], &newModel, "Game ended - reset to initial state")
+			} else {
+				newModel.Players[i].IsTurn = false
+				AddLogEntry(newModel.Players[i], &newModel, "Game ended")
+			}
+		}
+	}
+
+	return newModel, NoCommand
+}
+
+// handleEndGameConfirm handles the EndGameConfirmMsg
+func handleEndGameConfirm(msg *EndGameConfirmMsg, model Model) (Model, Command) {
+	// Create a command that will restore the main UI after handling the confirmation
+	restoreUICmd := func() Message {
+		return &ShowMainScreenMsg{}
+	}
+
+	// If user confirmed ending the game, proceed with the game ending logic
+	if msg.Confirmed {
+		// Get the updated model after ending the game
+		newModel, _ := handleEndGame(model)
+		return newModel, restoreUICmd
+	}
+
+	// If user canceled, just restore the UI
+	return model, restoreUICmd
+}
+
+// handleShowEndGameConfirm handles the ShowEndGameConfirmMsg
+func handleShowEndGameConfirm(model Model) (Model, Command) {
+	// Return the model unchanged and a command that will show the confirmation dialog
+	return model, func() Message {
+		// This will be handled by the main.go to show the dialog
+		return &ShowModalMsg{Type: "EndGameConfirm"}
+	}
 }
 
 // handleSwitchTurns handles the SwitchTurnsMsg
@@ -321,7 +408,10 @@ func handleShowMainScreen(model Model) (Model, Command) {
 	// Return to the main screen
 	newModel.CurrentScreen = "main"
 
-	return newModel, NoCommand
+	// Return a command that will restore the main UI from any modal
+	return newModel, func() Message {
+		return &RestoreMainUIMsg{}
+	}
 }
 
 // handleTick handles the TickMsg
@@ -371,6 +461,15 @@ func handleKeyPress(msg *KeyPressMsg, model Model) (Model, Command) {
 		case "s", "S":
 			// Start/pause/resume game
 			return handleStartGame(model)
+		case "e", "E":
+			// End game (only if game has started)
+			if model.GameStarted {
+				// Show confirmation dialog instead of directly ending the game
+				return model, func() Message {
+					// Return a command that will show the confirmation dialog
+					return &ShowEndGameConfirmMsg{}
+				}
+			}
 		case "p", "P":
 			// Next phase
 			return handleNextPhase(model)
@@ -404,7 +503,7 @@ func SetupInputCapture(app *tview.Application, msgChan chan<- Message) {
 			return nil
 		case tcell.KeyRune:
 			switch event.Rune() {
-			case 'o', 'O', 'a', 'A', 's', 'S', 'p', 'P', 'b', 'B', 'q', 'Q', ' ':
+			case 'o', 'O', 'a', 'A', 's', 'S', 'e', 'E', 'p', 'P', 'b', 'B', 'q', 'Q', ' ':
 				return nil
 			}
 		default:

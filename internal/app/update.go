@@ -148,7 +148,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], &newModel, "Game resumed", player.TurnCount)
+				AddLogEntry(newModel.Players[i], &newModel, "Game resumed")
 			}
 		}
 	} else if model.GameStatus == GameInProgress {
@@ -158,7 +158,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], &newModel, "Game paused", player.TurnCount)
+				AddLogEntry(newModel.Players[i], &newModel, "Game paused")
 			}
 		}
 	} else {
@@ -169,7 +169,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], &newModel, "Game started", player.TurnCount)
+				AddLogEntry(newModel.Players[i], &newModel, "Game started")
 			}
 		}
 	}
@@ -232,13 +232,10 @@ func handleNextPhase(model Model) (Model, Command) {
 		newPlayers[i] = &newPlayer
 
 		if player.IsTurn && player.CurrentPhase < len(model.Phases)-1 {
-			oldPhase := player.CurrentPhase
 			newPlayers[i].CurrentPhase = player.CurrentPhase + 1
 
 			// Log the phase change
-			AddLogEntry(newPlayers[i], &newModel, "Turn %d - Moved from phase: %s to phase: %s",
-				player.TurnCount,
-				model.Phases[oldPhase],
+			AddLogEntry(newPlayers[i], &newModel, "Started phase: %s",
 				model.Phases[newPlayers[i].CurrentPhase])
 		}
 	}
@@ -267,13 +264,10 @@ func handlePrevPhase(model Model) (Model, Command) {
 		newPlayers[i] = &newPlayer
 
 		if player.IsTurn && player.CurrentPhase > 0 {
-			oldPhase := player.CurrentPhase
 			newPlayers[i].CurrentPhase = player.CurrentPhase - 1
 
 			// Log the phase change
-			AddLogEntry(newPlayers[i], &newModel, "Turn %d - Moved from phase: %s to phase: %s",
-				player.TurnCount,
-				model.Phases[oldPhase],
+			AddLogEntry(newPlayers[i], &newModel, "Started phase: %s",
 				model.Phases[newPlayers[i].CurrentPhase])
 		}
 	}
@@ -337,7 +331,7 @@ func handleTick(model Model) (Model, Command) {
 		// Create a copy of the model to avoid modifying the original
 		newModel := model
 		newPlayers := make([]*Player, len(model.Players))
-		
+
 		// Increment total game time
 		newModel.TotalGameTime += 1 * time.Second
 

@@ -102,8 +102,7 @@ func (v *View) UpdateClock(model *Model) {
 // updateStatusPanel updates the status panel with the current game status.
 // It also changes the border color based on the game status.
 func updateStatusPanel(panel *tview.Flex, status string, model *Model) {
-	statusTextView := panel.GetItem(0).(*tview.TextView)
-	statusTextView.SetText(status)
+	StatusPanel.UpdateWithGameTime(panel, status, model.TotalGameTime)
 
 	switch model.GameStatus {
 	case GameNotStarted:

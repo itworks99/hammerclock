@@ -5,6 +5,7 @@ import (
 
 	"hammerclock/components/hammerclock/Palette"
 	"hammerclock/components/hammerclock/Rules"
+	"hammerclock/components/hammerclock/fileio"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -126,6 +127,8 @@ func Update(msg Message, model Model) (Model, Command) {
 	case *SetEnableCSVLogMsg:
 		newModel := model
 		newModel.Options.EnableCSVLog = msg.Value
+		// Persist options to disk
+		_ = fileio.SaveOptions(newModel.Options, "", true)
 		return newModel, NoCommand
 	default:
 		return model, NoCommand
@@ -334,6 +337,9 @@ func handleTick(model Model) (Model, Command) {
 		// Create a copy of the model to avoid modifying the original
 		newModel := model
 		newPlayers := make([]*Player, len(model.Players))
+		
+		// Increment total game time
+		newModel.TotalGameTime += 1 * time.Second
 
 		for i, player := range model.Players {
 			// Create a copy of each player

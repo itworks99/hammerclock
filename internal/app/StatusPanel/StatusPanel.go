@@ -1,6 +1,9 @@
 package StatusPanel
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -23,4 +26,10 @@ func Create(status string, borderColor tcell.Color, backgroundColor tcell.Color)
 	statusPanel.SetBackgroundColor(backgroundColor)
 
 	return statusPanel
+}
+
+// UpdateWithGameTime updates the status panel to include the total game time
+func UpdateWithGameTime(panel *tview.Flex, status string, totalGameTime time.Duration) {
+	statusTextView := panel.GetItem(0).(*tview.TextView)
+	statusTextView.SetText(fmt.Sprintf("%s | Total Game Time: %v", status, totalGameTime))
 }

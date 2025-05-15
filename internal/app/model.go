@@ -1,12 +1,12 @@
 package app
 
 import (
+	"fmt"
 	"time"
 
 	"hammerclock/components/hammerclock/Palette"
-	Rules2 "hammerclock/components/hammerclock/Rules"
-	hammerclockConfig "hammerclock/config"
 	"hammerclock/internal/app/LogPanel"
+	"hammerclock/internal/app/options"
 )
 
 // Model represents the entire application state
@@ -17,8 +17,9 @@ type Model struct {
 	GameStatus          GameStatus
 	CurrentScreen       string // Can be "main", "options", or "about"
 	GameStarted         bool
-	Options             Options
+	Options             options.Options
 	CurrentColorPalette Palette.ColorPalette
+	TotalGameTime       time.Duration // Total elapsed time for the entire game
 }
 
 // Player represents a player in the game
@@ -47,56 +48,29 @@ const (
 	GamePaused     GameStatus = "Game Paused"
 )
 
-// Options defines the configuration for a game, including player details, phases, and display preferences.
-type Options struct {
-	Default      int            `json:"default"`
-	Rules        []Rules2.Rules `json:"rules"`
-	PlayerCount  int            `json:"playerCount"`
-	PlayerNames  []string       `json:"playerNames"`
-	ColorPalette string         `json:"colorPalette"`
-	TimeFormat   string         `json:"timeFormat"`   // AMPM or 24h
-	EnableCSVLog bool           `json:"enableCSVLog"` // Enable/disable CSV logging
-}
-
-// DefaultPlayerNames Generate default player names
-func DefaultPlayerNames() []string {
-	var playerNames []string
-	for i := range hammerclockConfig.DefaultPlayerCount {
-		playerNames = append(playerNames, hammerclockConfig.DefaultPlayerPrefix+" "+string(rune(i+1)))
-	}
-	return playerNames
-}
-
-// DefaultOptions Default options
-var DefaultOptions = Options{
-	Default:      0,
-	Rules:        Rules2.AllRules,
-	PlayerCount:  hammerclockConfig.DefaultPlayerCount,
-	PlayerNames:  DefaultPlayerNames(),
-	ColorPalette: hammerclockConfig.DefaultColorPalette,
-	TimeFormat:   "AMPM",
-	EnableCSVLog: true, // CSV logging enabled by default
-}
-
 // NewModel creates a new model with default values
 func NewModel() Model {
 	// Initialize with default options
-	options := DefaultOptions
+	opts := options.DefaultOptions
 
 	// Create players
-	players := make([]*Player, options.PlayerCount)
+	players := make([]*Player, opts.PlayerCount)
 	model := Model{
 		Players:             players,
-		Phases:              options.Rules[options.Default].Phases,
+		Phases:              opts.Rules[opts.Default].Phases,
 		GameStatus:          GameNotStarted,
 		CurrentScreen:       "main",
 		GameStarted:         false,
-		Options:             options,
+		Options:             opts,
 		CurrentColorPalette: Palette.K9sPalette,
+		TotalGameTime:       0,
 	}
 
-	for i := 0; i < options.PlayerCount; i++ {
-		playerName := options.PlayerNames[i]
+	for i := 0; i < opts.PlayerCount; i++ {
+		playerName := fmt.Sprintf("Player %d", i+1)
+		if i < len(opts.PlayerNames) {
+			playerName = opts.PlayerNames[i]
+		}
 		players[i] = &Player{
 			Name:         playerName,
 			TimeElapsed:  0,

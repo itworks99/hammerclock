@@ -54,7 +54,7 @@ type Options struct {
 	PlayerCount  int            `json:"playerCount"`
 	PlayerNames  []string       `json:"playerNames"`
 	ColorPalette string         `json:"colorPalette"`
-	TimeFormat   string         `json:"timeFormat"` // AMPM or 24h
+	TimeFormat   string         `json:"timeFormat"`   // AMPM or 24h
 	EnableCSVLog bool           `json:"enableCSVLog"` // Enable/disable CSV logging
 }
 

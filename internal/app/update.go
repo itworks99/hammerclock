@@ -5,7 +5,6 @@ import (
 
 	"hammerclock/components/hammerclock/Palette"
 	"hammerclock/components/hammerclock/Rules"
-	"hammerclock/components/hammerclock/fileio"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -127,8 +126,6 @@ func Update(msg Message, model Model) (Model, Command) {
 	case *SetEnableCSVLogMsg:
 		newModel := model
 		newModel.Options.EnableCSVLog = msg.Value
-		// Persist options to disk
-		_ = fileio.SaveOptions(newModel.Options, "", true)
 		return newModel, NoCommand
 	default:
 		return model, NoCommand

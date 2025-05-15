@@ -111,3 +111,6 @@ fabric.properties
 /.idea/runConfigurations/hc.xml
 /tmp/
 /bin/
+
+logs.csv
+default.json

@@ -67,9 +67,9 @@ func main() {
 
 		// Add initial player log message
 		if i == 0 {
-			app.AddLogEntry(players[i], "Initialized - active player")
+			app.AddLogEntry(players[i], &model, "Initialized - active player")
 		} else {
-			app.AddLogEntry(players[i], "Initialized")
+			app.AddLogEntry(players[i], &model, "Initialized")
 		}
 	}
 	model.Players = players
@@ -114,7 +114,7 @@ func main() {
 				updatedModel, cmd := app.Update(msg, model)
 				model = updatedModel
 
-				 // Persist options to disk after every update
+				// Persist options to disk after every update
 				_ = fileio.SaveOptions(model.Options, "", true)
 
 				// Render the updated model

@@ -4,14 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"hammerclock/components/hammerclock/Palette"
 	"hammerclock/components/hammerclock/fileio"
 	hammerclockConfig "hammerclock/config"
 	"hammerclock/internal/app"
-	"hammerclock/internal/app/LogPanel"
+	logpanel "hammerclock/internal/app/LogPanel"
 )
+
+// Buffered channel for log entries
+var logChannel = make(chan logpanel.LogEntry, 100)
 
 // CLI usage information
 var cliUsage = `
@@ -30,8 +34,17 @@ Examples:
   hammerclock -o myOptions.json   # Run with custom options
 `
 
-// main function initializes the application, loads options, and starts the main loop
 func main() {
+	var logWg sync.WaitGroup
+	logWg.Add(1)
+	// Start background log writer
+	go func() {
+		defer logWg.Done()
+		for entry := range logChannel {
+			logpanel.WriteLogEntry(entry)
+		}
+	}()
+
 	// Parse command line flags
 	optionsFileFlag := flag.String("o", hammerclockConfig.DefaultOptionsFilename, "Path to the options file")
 	flag.Usage = func() {
@@ -52,7 +65,7 @@ func main() {
 	// Create players based on options
 	players := make([]*app.Player, options.PlayerCount)
 	for i := 0; i < options.PlayerCount; i++ {
-		playerName := fmt.Sprintf("Player %d", i+1) // Default name as fallback
+		playerName := fmt.Sprintf("Player %d", i+1)
 		if i < len(options.PlayerNames) {
 			playerName = options.PlayerNames[i]
 		}
@@ -62,14 +75,14 @@ func main() {
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
 			TurnCount:    0,
-			ActionLog:    []LogPanel.LogEntry{}, // Initialize empty action log
+			ActionLog:    []logpanel.LogEntry{},
 		}
 
 		// Add initial player log message
 		if i == 0 {
-			app.AddLogEntry(players[i], &model, "Initialized - active player")
+			AddLogEntryBuffered(players[i], &model, "Initialized - active player")
 		} else {
-			app.AddLogEntry(players[i], &model, "Initialized")
+			AddLogEntryBuffered(players[i], &model, "Initialized")
 		}
 	}
 	model.Players = players
@@ -92,12 +105,12 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				// Update the clock display
-				view.App.QueueUpdateDraw(func() {
-					view.UpdateClock(&model)
-				})
-
-				// Send a tick message
+				// Only update if the game is started
+				if model.GameStarted {
+					view.App.QueueUpdateDraw(func() {
+						view.UpdateClock(&model)
+					})
+				}
 				msgChan <- &app.TickMsg{}
 			case <-done:
 				return
@@ -110,22 +123,17 @@ func main() {
 		for {
 			select {
 			case msg := <-msgChan:
-				// Process the message and update the model
 				updatedModel, cmd := app.Update(msg, model)
 				model = updatedModel
 
-				// Persist options to disk after every update
 				_ = fileio.SaveOptions(model.Options, "", true)
 
-				// Render the updated model
 				view.App.QueueUpdateDraw(func() {
 					view.Render(&model)
 				})
 
-				// Execute the command if there is one
 				if cmd != nil {
 					go func() {
-						// Execute the command and send any resulting message
 						if resultMsg := cmd(); resultMsg != nil {
 							msgChan <- resultMsg
 						}
@@ -144,4 +152,32 @@ func main() {
 
 	// Clean up when the application exits
 	close(done)
+	close(logChannel)
+	logWg.Wait()
+}
+
+// AddLogEntryBuffered adds a log entry and writes to the log channel if enabled
+func AddLogEntryBuffered(player *app.Player, model *app.Model, format string, args ...any) {
+	currentPhase := ""
+	if player.CurrentPhase < len(model.Options.Rules[model.Options.Default].Phases) && player.CurrentPhase >= 0 {
+		currentPhase = model.Options.Rules[model.Options.Default].Phases[player.CurrentPhase]
+	}
+
+	logEntry := logpanel.LogEntry{
+		DateTime:   time.Now().Local().Format(hammerclockConfig.DefaultLogDateTimeFormat),
+		PlayerName: player.Name,
+		Turn:       player.TurnCount,
+		Phase:      currentPhase,
+		Message:    fmt.Sprintf(format, args...),
+	}
+
+	player.ActionLog = append(player.ActionLog, logEntry)
+	if model.Options.EnableCSVLog {
+		select {
+		case logChannel <- logEntry:
+			// sent successfully
+		default:
+			// channel full, drop log entry to avoid UI lag
+		}
+	}
 }

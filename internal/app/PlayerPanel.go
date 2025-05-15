@@ -8,6 +8,7 @@ import (
 	hammerclockConfig "hammerclock/config"
 	"hammerclock/internal/app/LogPanel"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -86,6 +87,32 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		SetBackgroundColor(model.CurrentColorPalette.Black).
 		SetBorderColor(borderColor)
 	horizontalDivider.SetTextColor(borderColor)
+
+	// Add mouse capture for smooth player selection
+	panel.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
+		if action == tview.MouseLeftClick {
+			// Only select if not already selected
+			if !player.IsTurn {
+				for _, p := range model.Players {
+					if p == player {
+						// Set this player as active
+						for i := range model.Players {
+							model.Players[i].IsTurn = false
+						}
+						player.IsTurn = true
+
+						// Set focus on the panel to show double-line border
+						panel.Focus(func(p tview.Primitive) {
+							// Delegate function - we don't need to do anything here
+						})
+						break
+					}
+				}
+			}
+		}
+		return action, event
+	})
+
 	return panel
 }
 
@@ -110,16 +137,22 @@ func updatePlayerPanels(players []*Player, panels []*tview.Flex, model *Model) {
 			gameInfoBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			elapsedTimeBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			currentTurnAndPhase.SetTextColor(model.CurrentColorPalette.DimWhite)
+			panels[i].Blur() // Remove focus
 		} else if player.IsTurn {
 			panels[i].SetTitle(" ACTIVE TURN ")
 			gameInfoBox.SetTextColor(model.CurrentColorPalette.White)
 			elapsedTimeBox.SetTextColor(model.CurrentColorPalette.White)
 			currentTurnAndPhase.SetTextColor(model.CurrentColorPalette.White)
+			// Set focus to get double-line border
+			panels[i].Focus(func(p tview.Primitive) {
+				// Delegate function - we don't need to do anything here
+			})
 		} else {
 			panels[i].SetTitle("")
 			gameInfoBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			elapsedTimeBox.SetTextColor(model.CurrentColorPalette.DimWhite)
 			currentTurnAndPhase.SetTextColor(model.CurrentColorPalette.DimWhite)
+			panels[i].Blur() // Remove focus
 		}
 		horizontalDivider.SetTextColor(panels[i].GetBorderColor())
 

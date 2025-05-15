@@ -5,11 +5,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"hammerclock/components/hammerclock/Palette"
 	"hammerclock/components/hammerclock/Rules"
 	"hammerclock/internal/app/clock"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 // createOptionsScreen creates the options screen with various settings
@@ -86,13 +87,23 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		msgChan <- &SetOneTurnForAllPlayersMsg{Value: checked}
 	})
 
+	// Create checkbox for CSV logging
+	csvLogBox := tview.NewCheckbox().
+		SetLabel("Enable CSV Logging: ").
+		SetChecked(model.Options.EnableCSVLog).
+		SetLabelColor(model.CurrentColorPalette.White)
+	csvLogBox.SetChangedFunc(func(checked bool) {
+		msgChan <- &SetEnableCSVLogMsg{Value: checked}
+	})
+
 	// Add components to options box
 	optionsBox.AddItem(rulesetBox, 0, 1, false).
 		AddItem(playerCountBox, 0, 1, false).
 		AddItem(playerNamesBox, 0, 1, false).
 		AddItem(colorPaletteBox, 0, 1, false).
 		AddItem(timeFormatBox, 0, 1, false).
-		AddItem(oneTurnForAllPlayersBox, 0, 1, false)
+		AddItem(oneTurnForAllPlayersBox, 0, 1, false).
+		AddItem(csvLogBox, 0, 1, false)
 
 	// Add options box and help content to options panel
 	optionsPanel.AddItem(optionsBox, 0, 0, 1, 2, 0, 0, false)

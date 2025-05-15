@@ -1,10 +1,13 @@
 package app
 
 import (
+	"encoding/csv"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
+	hammerclockConfig "hammerclock/config"
 	"hammerclock/internal/app/LogPanel"
 
 	"github.com/rivo/tview"
@@ -58,12 +61,8 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 
 	// Set initial content if any exists
 	if len(player.ActionLog) > 0 {
-		var b strings.Builder
-		for _, entry := range player.ActionLog {
-			b.WriteString(fmt.Sprintf("[%s] Turn %d, Phase %s: %s\n",
-				entry.DateTime.Format("15:04:05"), entry.Turn, entry.Phase, entry.Message))
-		}
-		logView.SetText(b.String())
+		// Use LogPanel.SetLogContent to consistently format log entries
+		LogPanel.SetLogContent(logView, player.ActionLog)
 	}
 
 	// Create a container with the log view
@@ -138,15 +137,46 @@ func updatePlayerPanels(players []*Player, panels []*tview.Flex, model *Model) {
 	}
 }
 
+// writeLogEntryToCSV appends a LogEntry to logs.csv in CSV format
+func writeLogEntryToCSV(entry LogPanel.LogEntry) {
+	filePath := "logs.csv"
+	fileExists := false
+	if _, err := os.Stat(filePath); err == nil {
+		fileExists = true
+	}
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return // Optionally log or print error
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write header if file is new
+	if !fileExists {
+		head := []string{"DateTime", "PlayerName", "Turn", "Phase", "Message"}
+		_ = writer.Write(head)
+	}
+	row := []string{
+		entry.DateTime,
+		entry.PlayerName,
+		fmt.Sprintf("%d", entry.Turn),
+		entry.Phase,
+		entry.Message,
+	}
+	_ = writer.Write(row)
+}
+
 // AddLogEntry adds a log entry to a player's action log
-func AddLogEntry(player *Player, format string, args ...any) {
+func AddLogEntry(player *Player, model *Model, format string, args ...any) {
 	currentPhase := ""
-	if player.CurrentPhase < len(DefaultOptions.Rules[DefaultOptions.Default].Phases) && player.CurrentPhase >= 0 {
-		currentPhase = DefaultOptions.Rules[DefaultOptions.Default].Phases[player.CurrentPhase]
+	if player.CurrentPhase < len(model.Options.Rules[model.Options.Default].Phases) && player.CurrentPhase >= 0 {
+		currentPhase = model.Options.Rules[model.Options.Default].Phases[player.CurrentPhase]
 	}
 
 	logEntry := LogPanel.LogEntry{
-		DateTime:   time.Now().Local(),
+		DateTime:   time.Now().Local().Format(hammerclockConfig.DefaultLogDateTimeFormat),
 		PlayerName: player.Name,
 		Turn:       player.TurnCount,
 		Phase:      currentPhase,
@@ -154,4 +184,7 @@ func AddLogEntry(player *Player, format string, args ...any) {
 	}
 
 	player.ActionLog = append(player.ActionLog, logEntry)
+	if model.Options.EnableCSVLog {
+		writeLogEntryToCSV(logEntry)
+	}
 }

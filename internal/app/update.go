@@ -3,10 +3,12 @@ package app
 import (
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"hammerclock/components/hammerclock/Palette"
 	"hammerclock/components/hammerclock/Rules"
+	"hammerclock/components/hammerclock/fileio"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 // Message represents a message that can be sent to the Update function
@@ -75,6 +77,11 @@ type SetOneTurnForAllPlayersMsg struct {
 	Value bool
 }
 
+// SetEnableCSVLogMsg is sent when the user toggles CSV logging
+type SetEnableCSVLogMsg struct {
+	Value bool
+}
+
 // Command represents a command that can be executed after an update
 type Command func() Message
 
@@ -117,6 +124,12 @@ func Update(msg Message, model Model) (Model, Command) {
 		return handleSetTimeFormat(msg, model)
 	case *SetOneTurnForAllPlayersMsg:
 		return handleSetOneTurnForAllPlayers(msg, model)
+	case *SetEnableCSVLogMsg:
+		newModel := model
+		newModel.Options.EnableCSVLog = msg.Value
+		// Persist options to disk
+		_ = fileio.SaveOptions(newModel.Options, "", true)
+		return newModel, NoCommand
 	default:
 		return model, NoCommand
 	}
@@ -135,7 +148,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], "Game resumed", player.TurnCount)
+				AddLogEntry(newModel.Players[i], &newModel, "Game resumed", player.TurnCount)
 			}
 		}
 	} else if model.GameStatus == GameInProgress {
@@ -145,7 +158,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], "Game paused", player.TurnCount)
+				AddLogEntry(newModel.Players[i], &newModel, "Game paused", player.TurnCount)
 			}
 		}
 	} else {
@@ -156,7 +169,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				AddLogEntry(newModel.Players[i], "Game started", player.TurnCount)
+				AddLogEntry(newModel.Players[i], &newModel, "Game started", player.TurnCount)
 			}
 		}
 	}
@@ -177,7 +190,7 @@ func handleSwitchTurns(model Model) (Model, Command) {
 		newPlayers[i] = &newPlayer
 
 		if player.IsTurn {
-			AddLogEntry(newPlayers[i], "Turn %d ended", player.TurnCount)
+			AddLogEntry(newPlayers[i], &newModel, "Turn %d ended", player.TurnCount)
 		}
 
 		// Switch turns
@@ -188,9 +201,9 @@ func handleSwitchTurns(model Model) (Model, Command) {
 			newPlayers[i].TurnCount++
 			newPlayers[i].CurrentPhase = 0
 			// Log for newly active players that their turn is starting
-			AddLogEntry(newPlayers[i], "Turn %d started", newPlayers[i].TurnCount)
+			AddLogEntry(newPlayers[i], &newModel, "Turn %d started", newPlayers[i].TurnCount)
 			if len(model.Phases) > 0 {
-				AddLogEntry(newPlayers[i], "Turn %d - Entered phase: %s", newPlayers[i].TurnCount, model.Phases[0])
+				AddLogEntry(newPlayers[i], &newModel, "Turn %d - Entered phase: %s", newPlayers[i].TurnCount, model.Phases[0])
 			}
 		}
 	}
@@ -223,7 +236,7 @@ func handleNextPhase(model Model) (Model, Command) {
 			newPlayers[i].CurrentPhase = player.CurrentPhase + 1
 
 			// Log the phase change
-			AddLogEntry(newPlayers[i], "Turn %d - Moved from phase: %s to phase: %s",
+			AddLogEntry(newPlayers[i], &newModel, "Turn %d - Moved from phase: %s to phase: %s",
 				player.TurnCount,
 				model.Phases[oldPhase],
 				model.Phases[newPlayers[i].CurrentPhase])
@@ -258,7 +271,7 @@ func handlePrevPhase(model Model) (Model, Command) {
 			newPlayers[i].CurrentPhase = player.CurrentPhase - 1
 
 			// Log the phase change
-			AddLogEntry(newPlayers[i], "Turn %d - Moved from phase: %s to phase: %s",
+			AddLogEntry(newPlayers[i], &newModel, "Turn %d - Moved from phase: %s to phase: %s",
 				player.TurnCount,
 				model.Phases[oldPhase],
 				model.Phases[newPlayers[i].CurrentPhase])

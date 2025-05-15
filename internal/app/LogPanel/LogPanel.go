@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -16,8 +15,8 @@ func CreateLogView() *tview.TextView {
 		SetTextAlign(tview.AlignLeft).
 		SetDynamicColors(true).
 		SetScrollable(true). // Enable scrolling
-		SetWordWrap(true).   // Enable word wrapping
-		SetWrap(true)        // Enable text wrapping
+		SetWordWrap(true). // Enable word wrapping
+		SetWrap(true) // Enable text wrapping
 }
 
 // CreateLogContainer creates a container with a log view.
@@ -32,7 +31,7 @@ func CreateLogContainer(logView *tview.TextView) *tview.Flex {
 		logView.ScrollToEnd()
 	})
 
-	// Setup keyboard and mouse handling for scrolling
+	// Setup mouse handling for scrolling
 	SetupLogViewInputHandling(logView)
 
 	return logContainer
@@ -79,47 +78,40 @@ func SetLogContent(logView *tview.TextView, logEntries interface{}) {
 	// Handle different types of log entries
 	switch entries := logEntries.(type) {
 	case []interface{}:
-		if len(entries) == 0 {
-			return
-		}
 		for _, entry := range entries {
-			if stringer, ok := entry.(fmt.Stringer); ok {
-				logText.WriteString(stringer.String() + "\n")
-			} else {
-				logText.WriteString(fmt.Sprintf("%v\n", entry))
-			}
+			logText.WriteString(formatLogEntry(entry))
 		}
 	case []string:
-		if len(entries) == 0 {
-			return
-		}
 		for _, entry := range entries {
 			logText.WriteString(entry + "\n")
 		}
 	default:
-		// For any other type, try to get the slice and iterate over it
-		if slice, ok := tryGetSlice(logEntries); ok && len(slice) > 0 {
+		if slice, ok := tryGetSlice(logEntries); ok {
 			for _, entry := range slice {
-				if stringer, ok := entry.(fmt.Stringer); ok {
-					logText.WriteString(stringer.String() + "\n")
-				} else {
-					logText.WriteString(fmt.Sprintf("%v\n", entry))
-				}
+				logText.WriteString(formatLogEntry(entry))
 			}
 		} else {
-			// Single item
-			if stringer, ok := logEntries.(fmt.Stringer); ok {
-				logText.WriteString(stringer.String() + "\n")
-			} else {
-				logText.WriteString(fmt.Sprintf("%v\n", logEntries))
-			}
+			logText.WriteString(formatLogEntry(logEntries))
 		}
 	}
 
-	// Only update if content has changed
+	// Update content only if it has changed
 	if logText.String() != logView.GetText(false) {
 		logView.SetText(logText.String())
 	}
+}
+
+// formatLogEntry formats a single log entry as a string.
+func formatLogEntry(entry interface{}) string {
+	// Check if it's a LogEntry type to use DisplayString
+	if logEntry, ok := entry.(LogEntry); ok {
+		return logEntry.DisplayString() + "\n"
+	}
+	// Fall back to regular String method for other types
+	if stringer, ok := entry.(fmt.Stringer); ok {
+		return stringer.String() + "\n"
+	}
+	return fmt.Sprintf("%v\n", entry)
 }
 
 // tryGetSlice attempts to convert an interface to a slice of interfaces
@@ -135,7 +127,7 @@ func tryGetSlice(obj interface{}) ([]interface{}, bool) {
 
 	length := val.Len()
 	result := make([]interface{}, length)
-	for i := range length {
+	for i := 0; i < length; i++ {
 		result[i] = val.Index(i).Interface()
 	}
 
@@ -144,9 +136,38 @@ func tryGetSlice(obj interface{}) ([]interface{}, bool) {
 
 // LogEntry represents a single entry in a player's action log
 type LogEntry struct {
-	DateTime   time.Time
+	DateTime   string
 	PlayerName string
 	Turn       int
 	Phase      string
 	Message    string
+}
+
+// String returns a formatted string representation of the log entry
+// This is used when the entry needs to be displayed with all details
+func (le LogEntry) String() string {
+	return fmt.Sprintf("[%s] %s | Turn %d | %s | %s", 
+		le.DateTime,
+		le.PlayerName,
+		le.Turn,
+		le.Phase,
+		le.Message)
+}
+
+// DisplayString returns a simplified string representation for UI display
+// This omits player name, turn, and phase since they're visible elsewhere in the UI
+// Also extracts only the time part from the DateTime field
+func (le LogEntry) DisplayString() string {
+	// Extract just the time part (the last 8 characters in the format "15:04:05")
+	timeOnly := le.DateTime
+	
+	// If the DateTime follows the format "2006-01-02 15:04:05"
+	// Extract just the time part (everything after the space)
+	if spaceIdx := strings.Index(le.DateTime, " "); spaceIdx != -1 && spaceIdx+1 < len(le.DateTime) {
+		timeOnly = le.DateTime[spaceIdx+1:]
+	}
+	
+	return fmt.Sprintf("[%s] %s", 
+		timeOnly,
+		le.Message)
 }

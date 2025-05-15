@@ -17,3 +17,6 @@ const DefaultPlayerPrefix = "Player"
 
 // DefaultPlayerCount is the default number of players in the game
 const DefaultPlayerCount = 2
+
+// DefaultLogDateTimeFormat is the default format for log date and time
+const DefaultLogDateTimeFormat = "2006-01-02 15:04:05"

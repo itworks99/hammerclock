@@ -55,6 +55,7 @@ type Options struct {
 	PlayerNames  []string       `json:"playerNames"`
 	ColorPalette string         `json:"colorPalette"`
 	TimeFormat   string         `json:"timeFormat"` // AMPM or 24h
+	EnableCSVLog bool           `json:"enableCSVLog"` // Enable/disable CSV logging
 }
 
 // DefaultPlayerNames Generate default player names
@@ -74,6 +75,7 @@ var DefaultOptions = Options{
 	PlayerNames:  DefaultPlayerNames(),
 	ColorPalette: hammerclockConfig.DefaultColorPalette,
 	TimeFormat:   "AMPM",
+	EnableCSVLog: true, // CSV logging enabled by default
 }
 
 // NewModel creates a new model with default values
@@ -83,6 +85,16 @@ func NewModel() Model {
 
 	// Create players
 	players := make([]*Player, options.PlayerCount)
+	model := Model{
+		Players:             players,
+		Phases:              options.Rules[options.Default].Phases,
+		GameStatus:          GameNotStarted,
+		CurrentScreen:       "main",
+		GameStarted:         false,
+		Options:             options,
+		CurrentColorPalette: Palette.K9sPalette,
+	}
+
 	for i := 0; i < options.PlayerCount; i++ {
 		playerName := options.PlayerNames[i]
 		players[i] = &Player{
@@ -95,19 +107,11 @@ func NewModel() Model {
 
 		// Add initial log entry
 		if i == 0 {
-			AddLogEntry(players[i], "Initialized - active player")
+			AddLogEntry(players[i], &model, "Initialized - active player")
 		} else {
-			AddLogEntry(players[i], "Initialized")
+			AddLogEntry(players[i], &model, "Initialized")
 		}
 	}
 
-	return Model{
-		Players:             players,
-		Phases:              options.Rules[options.Default].Phases,
-		GameStatus:          GameNotStarted,
-		CurrentScreen:       "main",
-		GameStarted:         false,
-		Options:             options,
-		CurrentColorPalette: Palette.K9sPalette,
-	}
+	return model
 }

@@ -1,12 +1,12 @@
-package app
+package hammerclock
 
 import (
 	"fmt"
 	"time"
 
-	"hammerclock/components/hammerclock/Palette"
-	"hammerclock/internal/app/LogPanel"
-	"hammerclock/internal/app/options"
+	"hammerclock/internal/hammerclock/options"
+	"hammerclock/internal/hammerclock/palette"
+	"hammerclock/internal/hammerclock/ui"
 )
 
 // Model represents the entire application state
@@ -18,7 +18,7 @@ type Model struct {
 	CurrentScreen       string // Can be "main", "options", or "about"
 	GameStarted         bool
 	Options             options.Options
-	CurrentColorPalette Palette.ColorPalette
+	CurrentColorPalette palette.ColorPalette
 	TotalGameTime       time.Duration // Total elapsed time for the entire game
 }
 
@@ -30,7 +30,7 @@ type Player struct {
 	CurrentPhase int           // Current phase of the game for this player
 	TurnCount    int           // Counter to track number of turns completed
 	ArmyList     []Unit
-	ActionLog    []LogPanel.LogEntry // Log of player actions during the game
+	ActionLog    []ui.LogEntry // Log of player actions during the game
 }
 
 // Unit represents a unit in a player's army
@@ -53,7 +53,7 @@ func NewModel() Model {
 	// Initialize with default options
 	opts := options.DefaultOptions
 
-	// Create players
+	// CreateAboutPanel players
 	players := make([]*Player, opts.PlayerCount)
 	model := Model{
 		Players:             players,
@@ -62,7 +62,7 @@ func NewModel() Model {
 		CurrentScreen:       "main",
 		GameStarted:         false,
 		Options:             opts,
-		CurrentColorPalette: Palette.K9sPalette,
+		CurrentColorPalette: palette.K9sPalette,
 		TotalGameTime:       0,
 	}
 
@@ -76,7 +76,7 @@ func NewModel() Model {
 			TimeElapsed:  0,
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
-			ActionLog:    []LogPanel.LogEntry{}, // Initialize empty action log
+			ActionLog:    []ui.LogEntry{}, // Initialize empty action log
 		}
 
 		// Add initial log entry

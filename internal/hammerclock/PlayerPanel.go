@@ -1,15 +1,15 @@
-package app
+package hammerclock
 
 import (
 	"fmt"
 	"strings"
 	"time"
 
-	hammerclockConfig "hammerclock/config"
-	"hammerclock/internal/app/LogPanel"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/config"
+	"hammerclock/internal/hammerclock/logging"
+	"hammerclock/internal/hammerclock/ui"
 )
 
 // CreatePlayerPanel creates a player panel
@@ -56,16 +56,16 @@ func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 		SetTextColor(model.CurrentColorPalette.White)
 
 	// Creating a scrollable log view
-	logView := LogPanel.CreateLogView()
+	logView := ui.CreateLogView()
 
 	// Set initial content if any exists
 	if len(player.ActionLog) > 0 {
 		// Use LogPanel.SetLogContent to consistently format log entries
-		LogPanel.SetLogContent(logView, player.ActionLog)
+		ui.SetLogContent(logView, player.ActionLog)
 	}
 
-	// Create a container with the log view
-	logContainer := LogPanel.CreateLogContainer(logView)
+	// CreateAboutPanel a container with the log view
+	logContainer := ui.CreateLogContainer(logView)
 	lower.AddItem(logTitle, 3, 0, false)
 	lower.AddItem(logContainer, 0, 1, true)
 
@@ -163,7 +163,7 @@ func updatePlayerPanels(players []*Player, panels []*tview.Flex, model *Model) {
 			logView := logContainer.GetItem(0).(*tview.TextView)
 
 			// Update log panel content
-			LogPanel.SetLogContent(logView, player.ActionLog)
+			ui.SetLogContent(logView, player.ActionLog)
 		}
 	}
 }
@@ -175,7 +175,7 @@ func AddLogEntry(player *Player, model *Model, format string, args ...any) {
 		currentPhase = model.Options.Rules[model.Options.Default].Phases[player.CurrentPhase]
 	}
 
-	logEntry := LogPanel.LogEntry{
+	logEntry := ui.LogEntry{
 		DateTime:   time.Now().Local().Format(hammerclockConfig.DefaultLogDateTimeFormat),
 		PlayerName: player.Name,
 		Turn:       player.TurnCount,
@@ -183,8 +183,9 @@ func AddLogEntry(player *Player, model *Model, format string, args ...any) {
 		Message:    fmt.Sprintf(format, args...),
 	}
 
+	// Add to in-memory player action log for UI
 	player.ActionLog = append(player.ActionLog, logEntry)
-	if model.Options.EnableCSVLog {
-		LogPanel.WriteLogEntry(logEntry)
-	}
+
+	// Write to file using the buffered logging system if enabled
+	logging.WriteLogEntry(logEntry, model.Options.EnableCSVLog)
 }

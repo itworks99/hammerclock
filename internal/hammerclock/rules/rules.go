@@ -1,4 +1,4 @@
-package Rules
+package rules
 
 // Rules defines the rules for a specific game, including the name, phases, and whether players are only taking
 // one turn (in that case, phases are being ignored).

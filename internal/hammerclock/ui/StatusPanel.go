@@ -1,4 +1,4 @@
-package StatusPanel
+package ui
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 	"github.com/rivo/tview"
 )
 
-// Create creates a panel that displays the game statusbar
-func Create(status string, borderColor tcell.Color, backgroundColor tcell.Color) *tview.Flex {
+// CreateStatusPanel creates a panel that displays the game statusbar
+func CreateStatusPanel(status string, borderColor tcell.Color, backgroundColor tcell.Color) *tview.Flex {
 	statusPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
-	// Create statusbar text view
+	// CreateStatusPanel statusbar text view
 	statusTextView := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetText(status)

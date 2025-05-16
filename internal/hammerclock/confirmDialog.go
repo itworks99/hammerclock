@@ -1,11 +1,11 @@
-package app
+package hammerclock
 
 import (
 	"github.com/rivo/tview"
 )
 
 // CreateEndGameConfirmationModal creates a modal dialog asking for confirmation to end the game
-func CreateEndGameConfirmationModal(view *View, model *Model) *tview.Modal {
+func CreateEndGameConfirmationModal(view *View) *tview.Modal {
 	modal := tview.NewModal().
 		SetText("Would you like to end the current game?").
 		AddButtons([]string{"Yes", "No"}).
@@ -19,9 +19,6 @@ func CreateEndGameConfirmationModal(view *View, model *Model) *tview.Modal {
 
 	// Style the modal
 	modal.SetBorder(true)
-	modal.SetBackgroundColor(model.CurrentColorPalette.Black)
-	modal.SetTextColor(model.CurrentColorPalette.White)
-	modal.SetBorderColor(model.CurrentColorPalette.Yellow)
 	modal.SetTitle(" Confirm End Game ")
 
 	return modal
@@ -46,7 +43,7 @@ func (v *View) ShowConfirmationModal(modal *tview.Modal) {
 	pages := tview.NewPages().
 		AddPage("background", v.MainFlex, true, true).
 		AddPage("modal", flex, true, true)
-		
+
 	// Set the pages as the application's root
 	v.App.SetRoot(pages, true)
 }

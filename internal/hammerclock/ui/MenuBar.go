@@ -1,4 +1,4 @@
-package MenuBar
+package ui
 
 import (
 	"fmt"

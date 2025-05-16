@@ -1,4 +1,4 @@
-package Palette
+package palette
 
 import (
 	"github.com/gdamore/tcell/v2"

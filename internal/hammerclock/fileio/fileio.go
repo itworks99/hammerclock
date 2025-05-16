@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	hammerclockConfig "hammerclock/config"
-	"hammerclock/internal/app/options"
+	"hammerclock/internal/hammerclock/config"
+	"hammerclock/internal/hammerclock/options"
 )
 
 // LoadOptions loads the options from a file

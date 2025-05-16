@@ -1,109 +1,19 @@
-package app
+package hammerclock
 
 import (
 	"time"
 
-	"hammerclock/components/hammerclock/Palette"
-	"hammerclock/components/hammerclock/Rules"
-	"hammerclock/components/hammerclock/fileio"
-	logpanel "hammerclock/internal/app/LogPanel"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/fileio"
+	"hammerclock/internal/hammerclock/palette"
+	"hammerclock/internal/hammerclock/rules"
+	"hammerclock/internal/hammerclock/ui"
 )
 
 // Message represents a message that can be sent to the Update function
 type Message interface {
-	// This is a marker interface
 }
-
-// StartGameMsg is sent when the user wants to start/pause/resume the game
-type StartGameMsg struct{}
-
-// SwitchTurnsMsg is sent when the user wants to switch turns
-type SwitchTurnsMsg struct{}
-
-// NextPhaseMsg is sent when the user wants to move to the next phase
-type NextPhaseMsg struct{}
-
-// PrevPhaseMsg is sent when the user wants to move to the previous phase
-type PrevPhaseMsg struct{}
-
-// ShowOptionsMsg is sent when the user wants to show the options screen
-type ShowOptionsMsg struct{}
-
-// ShowAboutMsg is sent when the user wants to show the about screen
-type ShowAboutMsg struct{}
-
-// ShowMainScreenMsg is sent when the user wants to return to the main screen
-type ShowMainScreenMsg struct{}
-
-// TickMsg is sent every second to update the clock and player times
-type TickMsg struct{}
-
-// KeyPressMsg is sent when a key is pressed
-type KeyPressMsg struct {
-	Key  tcell.Key
-	Rune rune
-}
-
-// EndGameMsg is sent when the user wants to end the current game
-type EndGameMsg struct{}
-
-// EndGameConfirmMsg is sent when the user confirms or cancels ending the game
-type EndGameConfirmMsg struct {
-	Confirmed bool
-}
-
-// ShowEndGameConfirmMsg is sent to show the end game confirmation dialog
-type ShowEndGameConfirmMsg struct{}
-
-// ShowModalMsg is sent to show a modal dialog
-type ShowModalMsg struct {
-	Type string
-}
-
-// RestoreMainUIMsg is sent to restore the main UI after a modal dialog
-type RestoreMainUIMsg struct{}
-
-// SetRulesetMsg is sent when the user selects a different ruleset
-type SetRulesetMsg struct {
-	Index int
-}
-
-// SetPlayerCountMsg is sent when the user changes the player count
-type SetPlayerCountMsg struct {
-	Count int
-}
-
-// SetPlayerNameMsg is sent when a player name is changed
-type SetPlayerNameMsg struct {
-	Index int
-	Name  string
-}
-
-// SetColorPaletteMsg is sent when the color palette is changed
-type SetColorPaletteMsg struct {
-	Name string
-}
-
-// SetTimeFormatMsg is sent when the time format is changed
-type SetTimeFormatMsg struct {
-	Format string
-}
-
-// SetOneTurnForAllPlayersMsg is sent when the "One Turn For All Players" option is toggled
-type SetOneTurnForAllPlayersMsg struct {
-	Value bool
-}
-
-// SetEnableCSVLogMsg is sent when the user toggles CSV logging
-type SetEnableCSVLogMsg struct {
-	Value bool
-}
-
-// Command represents a command that can be executed after an update
-type Command func() Message
 
 // NoCommand is a command that does nothing
 func NoCommand() Message {
@@ -165,7 +75,7 @@ func Update(msg Message, model Model) (Model, Command) {
 
 // handleStartGame handles the StartGameMsg
 func handleStartGame(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
 	// Toggle between start and pause
@@ -207,7 +117,7 @@ func handleStartGame(model Model) (Model, Command) {
 
 // handleEndGame handles the EndGameMsg
 func handleEndGame(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
 	// Only handle if the game was started
@@ -218,15 +128,15 @@ func handleEndGame(model Model) (Model, Command) {
 		newModel.TotalGameTime = 0
 
 		// Log action for players
-		for i, _ := range model.Players {
+		for i := range model.Players {
 			// Reset player state
 			newModel.Players[i].TimeElapsed = 0
 			newModel.Players[i].TurnCount = 0
 			newModel.Players[i].CurrentPhase = 0
-			
+
 			// Clear the action log
-			newModel.Players[i].ActionLog = []logpanel.LogEntry{}
-			
+			newModel.Players[i].ActionLog = []ui.LogEntry{}
+
 			// Keep turn state of player 1
 			if i == 0 {
 				newModel.Players[i].IsTurn = true
@@ -243,7 +153,7 @@ func handleEndGame(model Model) (Model, Command) {
 
 // handleEndGameConfirm handles the EndGameConfirmMsg
 func handleEndGameConfirm(msg *EndGameConfirmMsg, model Model) (Model, Command) {
-	// Create a command that will restore the main UI after handling the confirmation
+	// CreateAboutPanel a command that will restore the main UI after handling the confirmation
 	restoreUICmd := func() Message {
 		return &ShowMainScreenMsg{}
 	}
@@ -270,13 +180,13 @@ func handleShowEndGameConfirm(model Model) (Model, Command) {
 
 // handleSwitchTurns handles the SwitchTurnsMsg
 func handleSwitchTurns(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 	newPlayers := make([]*Player, len(model.Players))
 
 	// Log for currently active players that their turn is ending
 	for i, player := range model.Players {
-		// Create a copy of each player to avoid modifying the original
+		// CreateAboutPanel a copy of each player to avoid modifying the original
 		newPlayer := *player
 		newPlayers[i] = &newPlayer
 
@@ -312,13 +222,13 @@ func handleSwitchTurns(model Model) (Model, Command) {
 
 // handleNextPhase handles the NextPhaseMsg
 func handleNextPhase(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 	newPlayers := make([]*Player, len(model.Players))
 
 	// Move forward in the phase
 	for i, player := range model.Players {
-		// Create a copy of each player
+		// CreateAboutPanel a copy of each player
 		newPlayer := *player
 		newPlayers[i] = &newPlayer
 
@@ -344,13 +254,13 @@ func handleNextPhase(model Model) (Model, Command) {
 
 // handlePrevPhase handles the PrevPhaseMsg
 func handlePrevPhase(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 	newPlayers := make([]*Player, len(model.Players))
 
 	// Move backward in the phase
 	for i, player := range model.Players {
-		// Create a copy of each player
+		// CreateAboutPanel a copy of each player
 		newPlayer := *player
 		newPlayers[i] = &newPlayer
 
@@ -376,7 +286,7 @@ func handlePrevPhase(model Model) (Model, Command) {
 
 // handleShowOptions handles the ShowOptionsMsg
 func handleShowOptions(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
 	// Toggle between main screen and options screen
@@ -391,7 +301,7 @@ func handleShowOptions(model Model) (Model, Command) {
 
 // handleShowAbout handles the ShowAboutMsg
 func handleShowAbout(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
 	// Toggle between main screen and about screen
@@ -406,7 +316,7 @@ func handleShowAbout(model Model) (Model, Command) {
 
 // handleShowMainScreen handles the ShowMainScreenMsg
 func handleShowMainScreen(model Model) (Model, Command) {
-	// Create a copy of the model to avoid modifying the original
+	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
 	// Return to the main screen
@@ -422,7 +332,7 @@ func handleShowMainScreen(model Model) (Model, Command) {
 func handleTick(model Model) (Model, Command) {
 	// Only increment time if the game is in progress (not paused)
 	if model.GameStarted && model.GameStatus == GameInProgress {
-		// Create a copy of the model to avoid modifying the original
+		// CreateAboutPanel a copy of the model to avoid modifying the original
 		newModel := model
 		newPlayers := make([]*Player, len(model.Players))
 
@@ -430,7 +340,7 @@ func handleTick(model Model) (Model, Command) {
 		newModel.TotalGameTime += 1 * time.Second
 
 		for i, player := range model.Players {
-			// Create a copy of each player
+			// CreateAboutPanel a copy of each player
 			newPlayer := *player
 			newPlayers[i] = &newPlayer
 
@@ -561,7 +471,7 @@ func handleSetPlayerName(msg *SetPlayerNameMsg, model Model) (Model, Command) {
 func handleSetColorPalette(msg *SetColorPaletteMsg, model Model) (Model, Command) {
 	newModel := model
 	newModel.Options.ColorPalette = msg.Name
-	newModel.CurrentColorPalette = Palette.ColorPaletteByName(msg.Name)
+	newModel.CurrentColorPalette = palette.ColorPaletteByName(msg.Name)
 	return newModel, NoCommand
 }
 
@@ -575,10 +485,13 @@ func handleSetTimeFormat(msg *SetTimeFormatMsg, model Model) (Model, Command) {
 // handleSetOneTurnForAllPlayers handles changes to the "One Turn For All Players" option
 func handleSetOneTurnForAllPlayers(msg *SetOneTurnForAllPlayersMsg, model Model) (Model, Command) {
 	newModel := model
-	newRules := append([]Rules.Rules{}, newModel.Options.Rules...)
+	newRules := append([]rules.Rules{}, newModel.Options.Rules...)
 	newRule := newRules[newModel.Options.Default]
 	newRule.OneTurnForAllPlayers = msg.Value
 	newRules[newModel.Options.Default] = newRule
 	newModel.Options.Rules = newRules
 	return newModel, NoCommand
 }
+
+// Command represents a command that can be executed after an update
+type Command func() Message

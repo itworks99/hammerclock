@@ -1,19 +1,19 @@
 package options
 
 import (
-	"hammerclock/components/hammerclock/Rules"
-	hammerclockConfig "hammerclock/config"
+	"hammerclock/internal/hammerclock/config"
+	"hammerclock/internal/hammerclock/rules"
 )
 
 // Options defines the configuration for a game, including player details, phases, and display preferences.
 type Options struct {
-	Default      int            `json:"default"`
-	Rules        []Rules.Rules  `json:"rules"`
-	PlayerCount  int            `json:"playerCount"`
-	PlayerNames  []string       `json:"playerNames"`
-	ColorPalette string         `json:"colorPalette"`
-	TimeFormat   string         `json:"timeFormat"`   // AMPM or 24h
-	EnableCSVLog bool           `json:"enableCSVLog"` // Enable/disable CSV logging
+	Default      int           `json:"default"`
+	Rules        []rules.Rules `json:"rules"`
+	PlayerCount  int           `json:"playerCount"`
+	PlayerNames  []string      `json:"playerNames"`
+	ColorPalette string        `json:"colorPalette"`
+	TimeFormat   string        `json:"timeFormat"`   // AMPM or 24h
+	EnableCSVLog bool          `json:"enableCSVLog"` // Enable/disable CSV logging
 }
 
 // DefaultPlayerNames Generate default player names
@@ -28,7 +28,7 @@ func DefaultPlayerNames() []string {
 // DefaultOptions Default options
 var DefaultOptions = Options{
 	Default:      0,
-	Rules:        Rules.AllRules,
+	Rules:        rules.AllRules,
 	PlayerCount:  hammerclockConfig.DefaultPlayerCount,
 	PlayerNames:  DefaultPlayerNames(),
 	ColorPalette: hammerclockConfig.DefaultColorPalette,

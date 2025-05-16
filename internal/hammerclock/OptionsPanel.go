@@ -1,16 +1,15 @@
-package app
+package hammerclock
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
 
-	"hammerclock/components/hammerclock/Palette"
-	"hammerclock/components/hammerclock/Rules"
-	"hammerclock/internal/app/clock"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/palette"
+	"hammerclock/internal/hammerclock/rules"
+	"hammerclock/internal/hammerclock/ui"
 )
 
 // createOptionsScreen creates the options screen with various settings
@@ -25,20 +24,21 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetDirection(tview.FlexRow)
 
 	// Cache color palettes to avoid repeated calls
-	colorPalettes := Palette.ColorPalettes()
+	colorPalettes := palette.ColorPalettes()
 
-	// Create dropdown for rulesets
+	// CreateAboutPanel dropdown for rulesets
 	rulesetBox := tview.NewDropDown().
 		SetLabel("Select rules: ").
-		SetOptions(Rules.RulesetNames(model.Options.Rules), nil).
+		SetOptions(rules.RulesetNames(model.Options.Rules), nil).
 		SetCurrentOption(model.Options.Default).
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	rulesetBox.SetSelectedFunc(func(option string, index int) {
 		msgChan <- &SetRulesetMsg{Index: index}
+		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
-	// Create input field for player count
+	// CreateAboutPanel input field for player count
 	playerCountBox := tview.NewInputField().
 		SetLabel("Players: ").
 		SetText(strconv.Itoa(model.Options.PlayerCount)).
@@ -49,35 +49,38 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	playerCountBox.SetChangedFunc(func(text string) {
 		if count, err := strconv.Atoi(text); err == nil && count > 0 {
 			msgChan <- &SetPlayerCountMsg{Count: count}
+			updateRulesetContent(model, currentRulesetContentBox)
 		}
 	})
 
-	// Create player name input fields
+	// CreateAboutPanel player name input fields
 	playerNamesBox := createPlayerNameFields(model, msgChan)
 
-	// Create dropdown for color palettes
+	// CreateAboutPanel dropdown for color palettes
 	colorPaletteBox := tview.NewDropDown().
 		SetLabel("Select color palette: ").
 		SetOptions(colorPalettes, nil).
-		SetCurrentOption(Palette.ColorPaletteIndexByName(model.Options.ColorPalette)).
+		SetCurrentOption(palette.ColorPaletteIndexByName(model.Options.ColorPalette)).
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	colorPaletteBox.SetSelectedFunc(func(option string, index int) {
 		msgChan <- &SetColorPaletteMsg{Name: option}
+		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
-	// Create dropdown for time format
+	// CreateAboutPanel dropdown for time format
 	timeFormatBox := tview.NewDropDown().
 		SetLabel("Select time format: ").
 		SetOptions([]string{"AMPM", "24-hour"}, nil).
-		SetCurrentOption(clock.TimeFormatToIndex(model.Options.TimeFormat)).
+		SetCurrentOption(ui.TimeFormatToIndex(model.Options.TimeFormat)).
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	timeFormatBox.SetSelectedFunc(func(option string, index int) {
 		msgChan <- &SetTimeFormatMsg{Format: option}
+		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
-	// Create checkbox for "One Turn For All Players"
+	// CreateAboutPanel checkbox for "One Turn For All Players"
 	oneTurnForAllPlayersBox := tview.NewCheckbox().
 		SetLabel("One Turn For All Players: ").
 		SetChecked(model.Options.Rules[model.Options.Default].OneTurnForAllPlayers).
@@ -85,15 +88,17 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	// Set the changed function after initialization
 	oneTurnForAllPlayersBox.SetChangedFunc(func(checked bool) {
 		msgChan <- &SetOneTurnForAllPlayersMsg{Value: checked}
+		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
-	// Create checkbox for CSV logging
+	// CreateAboutPanel checkbox for CSV logging
 	csvLogBox := tview.NewCheckbox().
 		SetLabel("Enable CSV Logging: ").
 		SetChecked(model.Options.EnableCSVLog).
 		SetLabelColor(model.CurrentColorPalette.White)
 	csvLogBox.SetChangedFunc(func(checked bool) {
 		msgChan <- &SetEnableCSVLogMsg{Value: checked}
+		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
 	// Add components to options box
@@ -150,21 +155,21 @@ func updateRulesetContent(model *Model, textView *tview.Flex) {
 		model.Options.ColorPalette,
 	))
 
-	// Inline color palette display
-	palette := model.CurrentColorPalette
+	// Inline color color palette display
+	currentColorPalette := model.CurrentColorPalette
 	leftText.WriteString(" [b]Palette:[-] ")
 	colorBlocks := []struct {
 		Name  string
 		Color tcell.Color
 	}{
-		{"Blue", palette.Blue},
-		{"Cyan", palette.Cyan},
-		{"White", palette.White},
-		{"DimWhite", palette.DimWhite},
-		{"Yellow", palette.Yellow},
-		{"Green", palette.Green},
-		{"Red", palette.Red},
-		{"Black", palette.Black},
+		{"Blue", currentColorPalette.Blue},
+		{"Cyan", currentColorPalette.Cyan},
+		{"White", currentColorPalette.White},
+		{"DimWhite", currentColorPalette.DimWhite},
+		{"Yellow", currentColorPalette.Yellow},
+		{"Green", currentColorPalette.Green},
+		{"Red", currentColorPalette.Red},
+		{"Black", currentColorPalette.Black},
 	}
 	for _, c := range colorBlocks {
 		leftText.WriteString(fmt.Sprintf("[#%06x]█[-]", uint32(c.Color.TrueColor())))
@@ -185,7 +190,7 @@ func updateRulesetContent(model *Model, textView *tview.Flex) {
 	leftColumn := createTextColumn(leftText.String(), model.CurrentColorPalette.White)
 	rightColumn := createTextColumn(rightText.String(), model.CurrentColorPalette.White)
 
-	// Create grid layout
+	// CreateAboutPanel grid layout
 	grid := tview.NewGrid().
 		AddItem(leftColumn, 0, 0, 1, 1, 0, 0, false).
 		AddItem(rightColumn, 0, 1, 1, 1, 0, 0, false)
@@ -222,7 +227,7 @@ func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
 			label = "Player names: "
 		}
 
-		// Create the input field without setting the changed function initially
+		// CreateAboutPanel the input field without setting the changed function initially
 		inputField := tview.NewInputField().
 			SetLabel(label).
 			SetText(model.Options.PlayerNames[i]).

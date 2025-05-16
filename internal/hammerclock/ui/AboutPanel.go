@@ -1,4 +1,4 @@
-package AboutPanel
+package ui
 
 import (
 	"io"
@@ -7,13 +7,13 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/rivo/tview"
-	"hammerclock/config"
+	"hammerclock/internal/hammerclock/config"
 )
 
-func Create(mainColor tcell.Color) *tview.Flex {
+func CreateAboutPanel(mainColor tcell.Color) *tview.Flex {
 	aboutPanel := tview.NewFlex().SetDirection(tview.FlexRow)
 
-	// Create content with about information
+	// CreateAboutPanel content with about information
 	contentBox := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(mainColor).

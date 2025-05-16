@@ -1,16 +1,12 @@
-package app
+package hammerclock
 
 import (
 	"strings"
 	"time"
 
-	"hammerclock/components/hammerclock/Palette"
-	"hammerclock/internal/app/AboutPanel"
-	"hammerclock/internal/app/MenuBar"
-	"hammerclock/internal/app/StatusPanel"
-	"hammerclock/internal/app/clock"
-
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/palette"
+	"hammerclock/internal/hammerclock/ui"
 )
 
 // View represents the main UI structure of the application.
@@ -33,7 +29,7 @@ type View struct {
 // It sets up the main UI components and applies the current color palette.
 func NewView(model *Model, msgChan chan<- Message) *View {
 	app := tview.NewApplication()
-	Palette.ApplyColorPalette(model.CurrentColorPalette)
+	palette.ApplyColorPalette(model.CurrentColorPalette)
 
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow)
 	topFlex := createTopFlex(model)
@@ -43,9 +39,9 @@ func NewView(model *Model, msgChan chan<- Message) *View {
 	mainFlex.AddItem(playerPanelsContainer, 0, 1, false)
 
 	optionsScreen := createOptionsScreen(model, msgChan)
-	aboutScreen := AboutPanel.Create(model.CurrentColorPalette.White)
+	aboutScreen := ui.CreateAboutPanel(model.CurrentColorPalette.White)
 
-	statusPanel := StatusPanel.Create(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
+	statusPanel := ui.CreateStatusPanel(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
 	mainFlex.AddItem(statusPanel, 3, 0, false)
 
 	bottomMenu := createBottomMenu(model.GameStatus)
@@ -93,7 +89,7 @@ func (v *View) Render(model *Model) {
 // UpdateClock updates the clock display with the current time.
 // The time format is determined by the model's options.
 func (v *View) UpdateClock(model *Model) {
-	currentTime := time.Now().Format(clock.TimeFormat(model.Options.TimeFormat))
+	currentTime := time.Now().Format(ui.TimeFormat(model.Options.TimeFormat))
 	if v.ClockDisplay.GetText(false) != currentTime {
 		v.ClockDisplay.SetText(currentTime)
 	}
@@ -102,7 +98,7 @@ func (v *View) UpdateClock(model *Model) {
 // updateStatusPanel updates the status panel with the current game status.
 // It also changes the border color based on the game status.
 func updateStatusPanel(panel *tview.Flex, status string, model *Model) {
-	StatusPanel.UpdateWithGameTime(panel, status, model.TotalGameTime)
+	ui.UpdateWithGameTime(panel, status, model.TotalGameTime)
 
 	switch model.GameStatus {
 	case GameNotStarted:
@@ -117,7 +113,7 @@ func updateStatusPanel(panel *tview.Flex, status string, model *Model) {
 // updateMenuText updates the bottom menu text based on the current game status.
 // It modifies the description of menu options dynamically.
 func updateMenuText(menu *tview.TextView, status GameStatus) {
-	instructions := []MenuBar.MenuOption{
+	instructions := []ui.MenuOption{
 		{Key: "S", Description: "Start Game"},
 		{Key: "E", Description: "End Game"},
 		{Key: "SPACE", Description: "Switch Turns"},
@@ -142,7 +138,7 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 		if i > 0 {
 			menuString.WriteString("   ")
 		}
-		
+
 		// Special case for End Game option - dimmed and only visible when game started
 		if option.Key == "E" {
 			if status == GameNotStarted {
@@ -162,7 +158,7 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 func createTopFlex(model *Model) *tview.Flex {
 	topFlex := tview.NewFlex().SetDirection(tview.FlexColumn)
 
-	topMenu := MenuBar.CreateMenuBar([]MenuBar.MenuOption{
+	topMenu := ui.CreateMenuBar([]ui.MenuOption{
 		{Key: "O", Description: "Options"},
 		{Key: "A", Description: "About"},
 	}).SetDynamicColors(true)
@@ -178,7 +174,7 @@ func createTopFlex(model *Model) *tview.Flex {
 
 	topFlex.AddItem(tview.NewBox(), 0, 1, false)
 
-	hClock := clock.Display(model.Options.TimeFormat, model.CurrentColorPalette.White)
+	hClock := ui.Display(model.Options.TimeFormat, model.CurrentColorPalette.White)
 	topFlex.AddItem(hClock, 10, 0, false)
 
 	return topFlex
@@ -201,7 +197,7 @@ func createPlayerPanels(model *Model) (*tview.Flex, []*tview.Flex) {
 
 // createBottomMenu creates the bottom menu bar and initializes its text.
 func createBottomMenu(status GameStatus) *tview.TextView {
-	menu := MenuBar.CreateMenuBar(nil).SetDynamicColors(true)
+	menu := ui.CreateMenuBar(nil).SetDynamicColors(true)
 	updateMenuText(menu, status)
 	return menu
 }

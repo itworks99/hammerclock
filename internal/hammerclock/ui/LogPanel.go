@@ -1,9 +1,10 @@
-package LogPanel
+package ui
 
 import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -48,6 +49,8 @@ func SetupLogViewInputHandling(logView *tview.TextView) {
 			if row < logView.GetWrappedLineCount()-1 {
 				logView.ScrollTo(row+1, 0)
 			}
+		default:
+			// Handle other mouse actions as needed
 		}
 		return action, nil
 	})
@@ -109,15 +112,6 @@ func tryGetSlice(obj interface{}) ([]interface{}, bool) {
 	return result, true
 }
 
-// LogEntry represents a single log entry with details about an action.
-type LogEntry struct {
-	DateTime   string
-	PlayerName string
-	Turn       int
-	Phase      string
-	Message    string
-}
-
 // CreateString returns a detailed string representation of the log entry.
 func (le LogEntry) CreateString() string {
 	return fmt.Sprintf("[%s] %s | Turn %d | %s | %s",
@@ -134,18 +128,72 @@ func (le LogEntry) DisplayString() string {
 
 // WriteLogEntry appends a LogEntry to logs.csv in CSV format.
 func WriteLogEntry(entry LogEntry) {
-	filePath := "logs.csv"
+	// Use default log directory (current working directory)
+	logDir := "."
+	fileName := "logs.csv"
+	filePath := fileName
+
+	// If an environment variable for log directory is set, use it
+	if envLogDir := os.Getenv("HAMMERCLOCK_LOG_DIR"); envLogDir != "" {
+		logDir = envLogDir
+		filePath = filepath.Join(logDir, fileName)
+
+		// Ensure the directory exists
+		if err := os.MkdirAll(logDir, 0755); err != nil {
+			fmt.Printf("Error creating log directory %s: %v\n", logDir, err)
+			// Fall back to current directory
+			filePath = fileName
+		}
+	}
+
+	fileExists := false
+
+	// Check if file exists before opening
+	if _, err := os.Stat(filePath); err == nil {
+		fileExists = true
+	}
+
+	// Open file with appropriate flags
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		fmt.Printf("Error opening log file: %v\n", err)
 		return
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Printf("Error closing log file: %v\n", err)
+		}
+	}(file)
 
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	if stat, _ := os.Stat(filePath); stat.Size() == 0 {
-		writer.Write([]string{"DateTime", "PlayerName", "Turn", "Phase", "Message"})
+	// Write header if it's a new file
+	if !fileExists {
+		if err := writer.Write([]string{"DateTime", "PlayerName", "Turn", "Phase", "Message"}); err != nil {
+			fmt.Printf("Error writing CSV header: %v\n", err)
+			return
+		}
 	}
-	writer.Write([]string{entry.DateTime, entry.PlayerName, fmt.Sprintf("%d", entry.Turn), entry.Phase, entry.Message})
+
+	// Write the log entry data
+	if err := writer.Write([]string{
+		entry.DateTime,
+		entry.PlayerName,
+		fmt.Sprintf("%d", entry.Turn),
+		entry.Phase,
+		entry.Message,
+	}); err != nil {
+		fmt.Printf("Error writing CSV entry: %v\n", err)
+	}
+}
+
+// LogEntry represents a single log entry with details about an action.
+type LogEntry struct {
+	DateTime   string
+	PlayerName string
+	Turn       int
+	Phase      string
+	Message    string
 }

@@ -5,67 +5,64 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/common"
 	"hammerclock/internal/hammerclock/logging"
 	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/rules"
 )
 
-// Message represents a message that can be sent to the Update function
-type Message interface {
-}
-
 // Command represents a Command that can be executed after an update
-type Command func() Message
+type Command func() common.Message
 
 // noCommand is a Command that does nothing
-func noCommand() Message {
+func noCommand() common.Message {
 	return nil
 }
 
 // Update processes a message and returns an updated model and a command to execute
-func Update(msg Message, model Model) (Model, Command) {
+func Update(msg common.Message, model common.Model) (common.Model, Command) {
 	switch msg := msg.(type) {
-	case *startGameMsg:
+	case *common.StartGameMsg:
 		return handleStartGame(model)
-	case *endGameMsg:
+	case *common.EndGameMsg:
 		return handleEndGame(model)
-	case *endGameConfirmMsg:
+	case *common.EndGameConfirmMsg:
 		return handleEndGameConfirm(msg, model)
-	case *showEndGameConfirmMsg:
+	case *common.ShowEndGameConfirmMsg:
 		return handleShowEndGameConfirm(model)
-	case *switchTurnsMsg:
+	case *common.SwitchTurnsMsg:
 		return handleSwitchTurns(model)
-	case *nextPhaseMsg:
+	case *common.NextPhaseMsg:
 		return handleNextPhase(model)
-	case *prevPhaseMsg:
+	case *common.PrevPhaseMsg:
 		return handlePrevPhase(model)
-	case *showOptionsMsg:
+	case *common.ShowOptionsMsg:
 		return handleShowOptions(model)
-	case *showAboutMsg:
+	case *common.ShowAboutMsg:
 		return handleShowAbout(model)
-	case *showMainScreenMsg:
+	case *common.ShowMainScreenMsg:
 		return handleShowMainScreen(model)
-	case *RestoreMainUIMsg:
+	case *common.RestoreMainUIMsg:
 		return model, noCommand
-	case *TickMsg:
+	case *common.TickMsg:
 		return handleTick(model)
-	case *keyPressMsg:
+	case *common.KeyPressMsg:
 		return handleKeyPress(msg, model)
 	// Handle option update messages
-	case *setRulesetMsg:
+	case *common.SetRulesetMsg:
 		return handleSetRuleset(msg, model)
-	case *setPlayerCountMsg:
+	case *common.SetPlayerCountMsg:
 		return handleSetPlayerCount(msg, model)
-	case *setPlayerNameMsg:
+	case *common.SetPlayerNameMsg:
 		return handleSetPlayerName(msg, model)
-	case *setColorPaletteMsg:
+	case *common.SetColorPaletteMsg:
 		return handleSetColorPalette(msg, model)
-	case *setTimeFormatMsg:
+	case *common.SetTimeFormatMsg:
 		return handleSetTimeFormat(msg, model)
-	case *setOneTurnForAllPlayersMsg:
+	case *common.SetOneTurnForAllPlayersMsg:
 		return handleSetOneTurnForAllPlayers(msg, model)
-	case *setEnableLogMsg:
+	case *common.SetEnableLogMsg:
 		newModel := model
 		newModel.Options.LoggingEnabled = msg.Value
 		// Persist options to disk
@@ -77,7 +74,7 @@ func Update(msg Message, model Model) (Model, Command) {
 }
 
 // handleStartGame handles the startGameMsg
-func handleStartGame(model Model) (Model, Command) {
+func handleStartGame(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
@@ -89,7 +86,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				addLogEntry(newModel.Players[i], &newModel, "Game resumed")
+				logging.AddLogEntry(newModel.Players[i], &newModel, "Game resumed")
 			}
 		}
 	} else if model.GameStatus == gameInProgress {
@@ -99,7 +96,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				addLogEntry(newModel.Players[i], &newModel, "Game paused")
+				logging.AddLogEntry(newModel.Players[i], &newModel, "Game paused")
 			}
 		}
 	} else {
@@ -110,7 +107,7 @@ func handleStartGame(model Model) (Model, Command) {
 		// Log action for active player(s)
 		for i, player := range model.Players {
 			if player.IsTurn {
-				addLogEntry(newModel.Players[i], &newModel, "Game started")
+				logging.AddLogEntry(newModel.Players[i], &newModel, "Game started")
 			}
 		}
 	}
@@ -119,7 +116,7 @@ func handleStartGame(model Model) (Model, Command) {
 }
 
 // handleEndGame handles the endGameMsg
-func handleEndGame(model Model) (Model, Command) {
+func handleEndGame(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
@@ -138,15 +135,15 @@ func handleEndGame(model Model) (Model, Command) {
 			newModel.Players[i].CurrentPhase = 0
 
 			// Clear the action log
-			newModel.Players[i].ActionLog = []logging.LogEntry{}
+			newModel.Players[i].ActionLog = []common.LogEntry{}
 
 			// Keep turn state of player 1
 			if i == 0 {
 				newModel.Players[i].IsTurn = true
-				addLogEntry(newModel.Players[i], &newModel, "Game ended - reset to initial state")
+				logging.AddLogEntry(newModel.Players[i], &newModel, "Game ended - reset to initial state")
 			} else {
 				newModel.Players[i].IsTurn = false
-				addLogEntry(newModel.Players[i], &newModel, "Game ended")
+				logging.AddLogEntry(newModel.Players[i], &newModel, "Game ended")
 			}
 		}
 	}
@@ -155,10 +152,10 @@ func handleEndGame(model Model) (Model, Command) {
 }
 
 // handleEndGameConfirm handles the endGameConfirmMsg
-func handleEndGameConfirm(msg *endGameConfirmMsg, model Model) (Model, Command) {
+func handleEndGameConfirm(msg *common.EndGameConfirmMsg, model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a command that will restore the main UI after handling the confirmation
-	restoreUICmd := func() Message {
-		return &showMainScreenMsg{}
+	restoreUICmd := func() common.Message {
+		return &common.ShowMainScreenMsg{}
 	}
 
 	// If user confirmed ending the game, proceed with the game ending logic
@@ -173,19 +170,19 @@ func handleEndGameConfirm(msg *endGameConfirmMsg, model Model) (Model, Command) 
 }
 
 // handleShowEndGameConfirm handles the showEndGameConfirmMsg
-func handleShowEndGameConfirm(model Model) (Model, Command) {
+func handleShowEndGameConfirm(model common.Model) (common.Model, Command) {
 	// Return the model unchanged and a command that will show the confirmation dialog
-	return model, func() Message {
+	return model, func() common.Message {
 		// This will be handled by the main.go to show the dialog
-		return &ShowModalMsg{Type: "EndGameConfirm"}
+		return &common.ShowModalMsg{Type: "EndGameConfirm"}
 	}
 }
 
 // handleSwitchTurns handles the switchTurnsMsg
-func handleSwitchTurns(model Model) (Model, Command) {
+func handleSwitchTurns(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
-	newPlayers := make([]*Player, len(model.Players))
+	newPlayers := make([]*common.Player, len(model.Players))
 
 	// Log for currently active players that their turn is ending
 	for i, player := range model.Players {
@@ -194,7 +191,7 @@ func handleSwitchTurns(model Model) (Model, Command) {
 		newPlayers[i] = &newPlayer
 
 		if player.IsTurn {
-			addLogEntry(newPlayers[i], &newModel, "Turn %d ended", player.TurnCount)
+			logging.AddLogEntry(newPlayers[i], &newModel, "Turn %d ended", player.TurnCount)
 		}
 
 		// Switch turns
@@ -205,9 +202,9 @@ func handleSwitchTurns(model Model) (Model, Command) {
 			newPlayers[i].TurnCount++
 			newPlayers[i].CurrentPhase = 0
 			// Log for newly active players that their turn is starting
-			addLogEntry(newPlayers[i], &newModel, "Turn %d started", newPlayers[i].TurnCount)
+			logging.AddLogEntry(newPlayers[i], &newModel, "Turn %d started", newPlayers[i].TurnCount)
 			if len(model.Phases) > 0 {
-				addLogEntry(newPlayers[i], &newModel, "Turn %d - Entered phase: %s", newPlayers[i].TurnCount, model.Phases[0])
+				logging.AddLogEntry(newPlayers[i], &newModel, "Turn %d - Entered phase: %s", newPlayers[i].TurnCount, model.Phases[0])
 			}
 		}
 	}
@@ -224,10 +221,10 @@ func handleSwitchTurns(model Model) (Model, Command) {
 }
 
 // handleNextPhase handles the nextPhaseMsg
-func handleNextPhase(model Model) (Model, Command) {
+func handleNextPhase(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
-	newPlayers := make([]*Player, len(model.Players))
+	newPlayers := make([]*common.Player, len(model.Players))
 
 	// Move forward in the phase
 	for i, player := range model.Players {
@@ -239,7 +236,7 @@ func handleNextPhase(model Model) (Model, Command) {
 			newPlayers[i].CurrentPhase = player.CurrentPhase + 1
 
 			// Log the phase change
-			addLogEntry(newPlayers[i], &newModel, "Started phase: %s",
+			logging.AddLogEntry(newPlayers[i], &newModel, "Started phase: %s",
 				model.Phases[newPlayers[i].CurrentPhase])
 		}
 	}
@@ -256,10 +253,10 @@ func handleNextPhase(model Model) (Model, Command) {
 }
 
 // handlePrevPhase handles the prevPhaseMsg
-func handlePrevPhase(model Model) (Model, Command) {
+func handlePrevPhase(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
-	newPlayers := make([]*Player, len(model.Players))
+	newPlayers := make([]*common.Player, len(model.Players))
 
 	// Move backward in the phase
 	for i, player := range model.Players {
@@ -271,7 +268,7 @@ func handlePrevPhase(model Model) (Model, Command) {
 			newPlayers[i].CurrentPhase = player.CurrentPhase - 1
 
 			// Log the phase change
-			addLogEntry(newPlayers[i], &newModel, "Started phase: %s",
+			logging.AddLogEntry(newPlayers[i], &newModel, "Started phase: %s",
 				model.Phases[newPlayers[i].CurrentPhase])
 		}
 	}
@@ -288,7 +285,7 @@ func handlePrevPhase(model Model) (Model, Command) {
 }
 
 // handleShowOptions handles the showOptionsMsg
-func handleShowOptions(model Model) (Model, Command) {
+func handleShowOptions(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
@@ -303,7 +300,7 @@ func handleShowOptions(model Model) (Model, Command) {
 }
 
 // handleShowAbout handles the showAboutMsg
-func handleShowAbout(model Model) (Model, Command) {
+func handleShowAbout(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
@@ -318,7 +315,7 @@ func handleShowAbout(model Model) (Model, Command) {
 }
 
 // handleShowMainScreen handles the showMainScreenMsg
-func handleShowMainScreen(model Model) (Model, Command) {
+func handleShowMainScreen(model common.Model) (common.Model, Command) {
 	// CreateAboutPanel a copy of the model to avoid modifying the original
 	newModel := model
 
@@ -326,18 +323,18 @@ func handleShowMainScreen(model Model) (Model, Command) {
 	newModel.CurrentScreen = "main"
 
 	// Return a command that will restore the main UI from any modal
-	return newModel, func() Message {
-		return &RestoreMainUIMsg{}
+	return newModel, func() common.Message {
+		return &common.RestoreMainUIMsg{}
 	}
 }
 
 // handleTick handles the TickMsg
-func handleTick(model Model) (Model, Command) {
+func handleTick(model common.Model) (common.Model, Command) {
 	// Only increment time if the game is in progress (not paused)
 	if model.GameStarted && model.GameStatus == gameInProgress {
 		// CreateAboutPanel a copy of the model to avoid modifying the original
 		newModel := model
-		newPlayers := make([]*Player, len(model.Players))
+		newPlayers := make([]*common.Player, len(model.Players))
 
 		// Increment total game time
 		newModel.TotalGameTime += 1 * time.Second
@@ -362,7 +359,7 @@ func handleTick(model Model) (Model, Command) {
 }
 
 // handleKeyPress handles the keyPressMsg
-func handleKeyPress(msg *keyPressMsg, model Model) (Model, Command) {
+func handleKeyPress(msg *common.KeyPressMsg, model common.Model) (common.Model, Command) {
 	switch msg.Key {
 	case tcell.KeyEscape, tcell.KeyCtrlC:
 		// Quit the application
@@ -382,9 +379,9 @@ func handleKeyPress(msg *keyPressMsg, model Model) (Model, Command) {
 			// End game (only if game has started)
 			if model.GameStarted {
 				// Show confirmation dialog instead of directly ending the game
-				return model, func() Message {
+				return model, func() common.Message {
 					// Return a command that will show the confirmation dialog
-					return &showEndGameConfirmMsg{}
+					return &common.ShowEndGameConfirmMsg{}
 				}
 			}
 		case "p", "P":
@@ -409,10 +406,10 @@ func handleKeyPress(msg *keyPressMsg, model Model) (Model, Command) {
 }
 
 // SetupInputCapture sets up the input capture for the tview application
-func SetupInputCapture(app *tview.Application, msgChan chan<- Message) {
+func SetupInputCapture(app *tview.Application, msgChan chan<- common.Message) {
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// Send a KeyPressMsg to the message channel
-		msgChan <- &keyPressMsg{Key: event.Key(), Rune: event.Rune()}
+		msgChan <- &common.KeyPressMsg{Key: event.Key(), Rune: event.Rune()}
 
 		// Handle specific keys and prevent them from propagating
 		switch event.Key() {
@@ -432,7 +429,7 @@ func SetupInputCapture(app *tview.Application, msgChan chan<- Message) {
 
 // Option update handlers
 // handleSetRuleset handles changes to the selected ruleset
-func handleSetRuleset(msg *setRulesetMsg, model Model) (Model, Command) {
+func handleSetRuleset(msg *common.SetRulesetMsg, model common.Model) (common.Model, Command) {
 	newModel := model
 	newModel.Options.Default = msg.Index
 	newModel.Phases = model.Options.Rules[msg.Index].Phases
@@ -440,7 +437,7 @@ func handleSetRuleset(msg *setRulesetMsg, model Model) (Model, Command) {
 }
 
 // handleSetPlayerCount handles changes to the player count
-func handleSetPlayerCount(msg *setPlayerCountMsg, model Model) (Model, Command) {
+func handleSetPlayerCount(msg *common.SetPlayerCountMsg, model common.Model) (common.Model, Command) {
 	if msg.Count <= 0 {
 		return model, noCommand
 	}
@@ -458,7 +455,7 @@ func handleSetPlayerCount(msg *setPlayerCountMsg, model Model) (Model, Command) 
 }
 
 // handleSetPlayerName handles changes to a player's name
-func handleSetPlayerName(msg *setPlayerNameMsg, model Model) (Model, Command) {
+func handleSetPlayerName(msg *common.SetPlayerNameMsg, model common.Model) (common.Model, Command) {
 	if msg.Index < 0 || msg.Index >= len(model.Options.PlayerNames) {
 		return model, noCommand
 	}
@@ -471,7 +468,7 @@ func handleSetPlayerName(msg *setPlayerNameMsg, model Model) (Model, Command) {
 }
 
 // handleSetColorPalette handles changes to the color palette
-func handleSetColorPalette(msg *setColorPaletteMsg, model Model) (Model, Command) {
+func handleSetColorPalette(msg *common.SetColorPaletteMsg, model common.Model) (common.Model, Command) {
 	newModel := model
 	newModel.Options.ColorPalette = msg.Name
 	newModel.CurrentColorPalette = palette.ColorPaletteByName(msg.Name)
@@ -479,14 +476,14 @@ func handleSetColorPalette(msg *setColorPaletteMsg, model Model) (Model, Command
 }
 
 // handleSetTimeFormat handles changes to the time format
-func handleSetTimeFormat(msg *setTimeFormatMsg, model Model) (Model, Command) {
+func handleSetTimeFormat(msg *common.SetTimeFormatMsg, model common.Model) (common.Model, Command) {
 	newModel := model
 	newModel.Options.TimeFormat = msg.Format
 	return newModel, noCommand
 }
 
 // handleSetOneTurnForAllPlayers handles changes to the "One Turn For All Players" option
-func handleSetOneTurnForAllPlayers(msg *setOneTurnForAllPlayersMsg, model Model) (Model, Command) {
+func handleSetOneTurnForAllPlayers(msg *common.SetOneTurnForAllPlayersMsg, model common.Model) (common.Model, Command) {
 	newModel := model
 	newRules := append([]rules.Rules{}, newModel.Options.Rules...)
 	newRule := newRules[newModel.Options.Default]

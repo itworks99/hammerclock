@@ -2,60 +2,26 @@ package hammerclock
 
 import (
 	"fmt"
-	"time"
 
-	"hammerclock/internal/hammerclock/logging"
+	"hammerclock/internal/hammerclock/common"
 	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
 )
 
-// Model represents the entire application state
-type Model struct {
-	// Game state
-	Players             []*Player
-	Phases              []string
-	GameStatus          gameStatus
-	CurrentScreen       string // Can be "main", "options", or "about"
-	GameStarted         bool
-	Options             options.Options
-	CurrentColorPalette palette.ColorPalette
-	TotalGameTime       time.Duration // Total elapsed time for the entire game
-}
-
-// Player represents a player in the game
-type Player struct {
-	Name         string
-	TimeElapsed  time.Duration // Time elapsed for the player
-	IsTurn       bool          // Indicates if it's this player's turn
-	CurrentPhase int           // Current phase of the game for this player
-	TurnCount    int           // Counter to track number of turns completed
-	ArmyList     []unit
-	ActionLog    []logging.LogEntry // Log of player actions during the game
-}
-
-// unit represents a unit in a player's army
-type unit struct {
-	Name   string
-	Points int
-}
-
-// gameStatus represents the current state of the game
-type gameStatus string
-
 const (
-	gameNotStarted gameStatus = "Game Not Started"
-	gameInProgress gameStatus = "Game In Progress"
-	gamePaused     gameStatus = "Game Paused"
+	gameNotStarted common.GameStatus = "Game Not Started"
+	gameInProgress common.GameStatus = "Game In Progress"
+	gamePaused     common.GameStatus = "Game Paused"
 )
 
 // NewModel creates a new model with default values
-func NewModel() Model {
+func NewModel() common.Model {
 	// Initialize with default options
 	opts := options.DefaultOptions
 
 	// CreateAboutPanel players
-	players := make([]*Player, opts.PlayerCount)
-	model := Model{
+	players := make([]*common.Player, opts.PlayerCount)
+	model := common.Model{
 		Players:             players,
 		Phases:              opts.Rules[opts.Default].Phases,
 		GameStatus:          gameNotStarted,
@@ -71,12 +37,12 @@ func NewModel() Model {
 		if i < len(opts.PlayerNames) {
 			playerName = opts.PlayerNames[i]
 		}
-		players[i] = &Player{
+		players[i] = &common.Player{
 			Name:         playerName,
 			TimeElapsed:  0,
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
-			ActionLog:    []logging.LogEntry{}, // Initialize empty action log
+			ActionLog:    []common.LogEntry{}, // Initialize empty action log
 		}
 	}
 

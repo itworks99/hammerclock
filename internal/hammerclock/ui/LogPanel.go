@@ -7,11 +7,11 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"hammerclock/internal/hammerclock/logging"
+	"hammerclock/internal/hammerclock/common"
 )
 
-// CreateLogView initializes a scrollable, word-wrapped text view for logs.
-func CreateLogView() *tview.TextView {
+// createLogView initializes a scrollable, word-wrapped text view for logs.
+func createLogView() *tview.TextView {
 	return tview.NewTextView().
 		SetTextAlign(tview.AlignLeft).
 		SetDynamicColors(true).
@@ -19,8 +19,8 @@ func CreateLogView() *tview.TextView {
 		SetWordWrap(true)
 }
 
-// CreateLogContainer wraps the log view in a container with auto-scroll and input handling.
-func CreateLogContainer(logView *tview.TextView) *tview.Flex {
+// createLogContainer wraps the log view in a container with auto-scroll and input handling.
+func createLogContainer(logView *tview.TextView) *tview.Flex {
 	logView.SetChangedFunc(func() { logView.ScrollToEnd() }) // Auto-scroll on content change.
 	setupLogViewInputHandling(logView)                       // Enable mouse scrolling.
 
@@ -79,7 +79,7 @@ func SetLogContent(logView *tview.TextView, logEntries interface{}) {
 // formatLogEntry converts a log entry to a string.
 func formatLogEntry(entry interface{}) string {
 	switch e := entry.(type) {
-	case logging.LogEntry:
+	case common.LogEntry:
 		return displayLogEntry(e) + "\n"
 	case fmt.Stringer:
 		return e.String() + "\n"
@@ -103,7 +103,7 @@ func tryGetSlice(obj interface{}) ([]interface{}, bool) {
 }
 
 // displayLogEntry returns a simplified string representation for UI display.
-func displayLogEntry(le logging.LogEntry) string {
+func displayLogEntry(le common.LogEntry) string {
 	if spaceIdx := strings.Index(le.DateTime, " "); spaceIdx != -1 {
 		return fmt.Sprintf("[%s] %s", le.DateTime[spaceIdx+1:], le.Message)
 	}

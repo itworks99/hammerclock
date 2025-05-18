@@ -2,6 +2,7 @@ package hammerclock
 
 import (
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/common"
 )
 
 // CreateEndGameConfirmationModal creates a modal dialog asking for confirmation to end the game
@@ -11,9 +12,9 @@ func CreateEndGameConfirmationModal(view *View) *tview.Modal {
 		AddButtons([]string{"Yes", "No"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonIndex == 0 { // "Yes" is the first button (index 0)
-				view.MessageChan <- &endGameConfirmMsg{Confirmed: true}
+				view.MessageChan <- &common.EndGameConfirmMsg{Confirmed: true}
 			} else {
-				view.MessageChan <- &endGameConfirmMsg{Confirmed: false}
+				view.MessageChan <- &common.EndGameConfirmMsg{Confirmed: false}
 			}
 		})
 

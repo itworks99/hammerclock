@@ -1,4 +1,4 @@
-package hammerclock
+package ui
 
 import (
 	"fmt"
@@ -7,13 +7,13 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/common"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/rules"
-	"hammerclock/internal/hammerclock/ui"
 )
 
-// createOptionsScreen creates the options screen with various settings
-func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
+// CreateOptionsScreen creates the options screen with various settings
+func CreateOptionsScreen(model *common.Model, msgChan chan<- common.Message) *tview.Grid {
 	optionsPanel := tview.NewGrid().
 		SetRows(10).
 		SetColumns(0).
@@ -34,7 +34,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	rulesetBox.SetSelectedFunc(func(option string, index int) {
-		msgChan <- &setRulesetMsg{Index: index}
+		msgChan <- &common.SetRulesetMsg{Index: index}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -48,7 +48,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	// Set the changed function after initialization, not during
 	playerCountBox.SetChangedFunc(func(text string) {
 		if count, err := strconv.Atoi(text); err == nil && count > 0 {
-			msgChan <- &setPlayerCountMsg{Count: count}
+			msgChan <- &common.SetPlayerCountMsg{Count: count}
 			updateRulesetContent(model, currentRulesetContentBox)
 		}
 	})
@@ -64,7 +64,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	colorPaletteBox.SetSelectedFunc(func(option string, index int) {
-		msgChan <- &setColorPaletteMsg{Name: option}
+		msgChan <- &common.SetColorPaletteMsg{Name: option}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -72,11 +72,11 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	timeFormatBox := tview.NewDropDown().
 		SetLabel("Select time format: ").
 		SetOptions([]string{"AMPM", "24-hour"}, nil).
-		SetCurrentOption(ui.TimeFormatToIndex(model.Options.TimeFormat)).
+		SetCurrentOption(TimeFormatToIndex(model.Options.TimeFormat)).
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	timeFormatBox.SetSelectedFunc(func(option string, index int) {
-		msgChan <- &setTimeFormatMsg{Format: option}
+		msgChan <- &common.SetTimeFormatMsg{Format: option}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -87,7 +87,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	oneTurnForAllPlayersBox.SetChangedFunc(func(checked bool) {
-		msgChan <- &setOneTurnForAllPlayersMsg{Value: checked}
+		msgChan <- &common.SetOneTurnForAllPlayersMsg{Value: checked}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -97,7 +97,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetChecked(model.Options.LoggingEnabled).
 		SetLabelColor(model.CurrentColorPalette.White)
 	csvLogBox.SetChangedFunc(func(checked bool) {
-		msgChan <- &setEnableLogMsg{Value: checked}
+		msgChan <- &common.SetEnableLogMsg{Value: checked}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -137,7 +137,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 }
 
 // updateRulesetContent updates the content of the ruleset display
-func updateRulesetContent(model *Model, textView *tview.Flex) {
+func updateRulesetContent(model *common.Model, textView *tview.Flex) {
 	var leftText, rightText strings.Builder
 
 	// Build left column content
@@ -210,7 +210,7 @@ func createTextColumn(text string, color tcell.Color) *tview.TextView {
 }
 
 // createPlayerNameFields creates input fields for player names
-func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
+func createPlayerNameFields(model *common.Model, msgChan chan<- common.Message) *tview.Grid {
 	playerNamesFlex := tview.NewGrid().
 		SetRows(1).
 		SetColumns(0).
@@ -240,7 +240,7 @@ func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
 		// Store index in a closure to avoid variable capture issues
 		idx := i
 		inputField.SetChangedFunc(func(text string) {
-			msgChan <- &setPlayerNameMsg{
+			msgChan <- &common.SetPlayerNameMsg{
 				Index: idx,
 				Name:  strings.TrimSpace(text),
 			}

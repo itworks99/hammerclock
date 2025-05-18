@@ -7,10 +7,14 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
+
+	"hammerclock/internal/hammerclock/common"
+	"hammerclock/internal/hammerclock/config"
 )
 
 // Buffered channel for log entries
-var logChannel chan LogEntry
+var logChannel chan common.LogEntry
 var logInitialized bool
 var logWg sync.WaitGroup
 var logMutex sync.Mutex
@@ -24,7 +28,7 @@ func Initialise() {
 		return
 	}
 
-	logChannel = make(chan LogEntry, 100)
+	logChannel = make(chan common.LogEntry, 100)
 	logWg.Add(1)
 	// Start background log writer
 	go func() {
@@ -58,7 +62,7 @@ func Cleanup() {
 }
 
 // SendLogEntry sends a log entry to the buffered channel if enableLogging is true
-func SendLogEntry(entry LogEntry) {
+func SendLogEntry(entry common.LogEntry) {
 	// Make sure logging is initialized
 	if !logInitialized {
 		Initialise()
@@ -74,7 +78,7 @@ func SendLogEntry(entry LogEntry) {
 }
 
 // writeLogEntry appends a LogEntry to logs.csv in CSV format.
-func writeLogEntry(entry LogEntry) {
+func writeLogEntry(entry common.LogEntry) {
 	// Use default log directory (current working directory)
 	logDir := "."
 	fileName := "logs.csv"
@@ -136,11 +140,24 @@ func writeLogEntry(entry LogEntry) {
 	}
 }
 
-// LogEntry represents a single log entry with details about an action.
-type LogEntry struct {
-	DateTime   string
-	PlayerName string
-	Turn       int
-	Phase      string
-	Message    string
+// AddLogEntry adds a log entry to a player's action log
+func AddLogEntry(player *common.Player, model *common.Model, format string, args ...any) {
+	currentPhase := ""
+	if player.CurrentPhase < len(model.Options.Rules[model.Options.Default].Phases) && player.CurrentPhase >= 0 {
+		currentPhase = model.Options.Rules[model.Options.Default].Phases[player.CurrentPhase]
+	}
+
+	logEntry := common.LogEntry{
+		DateTime:   time.Now().Local().Format(hammerclockConfig.DefaultLogDateTimeFormat),
+		PlayerName: player.Name,
+		Turn:       player.TurnCount,
+		Phase:      currentPhase,
+		Message:    fmt.Sprintf(format, args...),
+	}
+
+	// Add to in-memory player action log for UI
+	player.ActionLog = append(player.ActionLog, logEntry)
+
+	// Send log entry to the logging channel
+	SendLogEntry(logEntry)
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"hammerclock/internal/hammerclock"
+	"hammerclock/internal/hammerclock/common"
 	"hammerclock/internal/hammerclock/config"
 	"hammerclock/internal/hammerclock/logging"
 	"hammerclock/internal/hammerclock/options"
@@ -54,25 +55,25 @@ func main() {
 	model.CurrentColorPalette = palette.ColorPaletteByName(loadedOptions.ColorPalette)
 
 	// CreateAboutPanel players based on loadedOptions
-	players := make([]*hammerclock.Player, loadedOptions.PlayerCount)
+	players := make([]*common.Player, loadedOptions.PlayerCount)
 	for i := 0; i < loadedOptions.PlayerCount; i++ {
 		playerName := fmt.Sprintf("Player %d", i+1)
 		if i < len(loadedOptions.PlayerNames) {
 			playerName = loadedOptions.PlayerNames[i]
 		}
-		players[i] = &hammerclock.Player{
+		players[i] = &common.Player{
 			Name:         playerName,
 			TimeElapsed:  0,
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
 			TurnCount:    0,
-			ActionLog:    []logging.LogEntry{},
+			ActionLog:    []common.LogEntry{},
 		}
 	}
 	model.Players = players
 
 	// Set up message channel for communication between components
-	msgChan := make(chan hammerclock.Message)
+	msgChan := make(chan common.Message)
 	done := make(chan struct{})
 
 	// CreateAboutPanel the view
@@ -95,7 +96,7 @@ func main() {
 						view.UpdateClock(&model)
 					})
 				}
-				msgChan <- &hammerclock.TickMsg{}
+				msgChan <- &common.TickMsg{}
 			case <-done:
 				return
 			}
@@ -120,7 +121,7 @@ func main() {
 					go func() {
 						if resultMsg := cmd(); resultMsg != nil {
 							// Special handling for ShowModalMsg
-							if showModal, ok := resultMsg.(*hammerclock.ShowModalMsg); ok {
+							if showModal, ok := resultMsg.(*common.ShowModalMsg); ok {
 								view.App.QueueUpdateDraw(func() {
 									switch showModal.Type {
 									case "EndGameConfirm":
@@ -128,7 +129,7 @@ func main() {
 										view.ShowConfirmationModal(modal)
 									}
 								})
-							} else if _, ok := resultMsg.(*hammerclock.RestoreMainUIMsg); ok {
+							} else if _, ok := resultMsg.(*common.RestoreMainUIMsg); ok {
 								view.App.QueueUpdateDraw(func() {
 									view.RestoreMainUI()
 								})

@@ -4,25 +4,29 @@
     <option name="enabledLinters">
       <list>
         <option value="exportloopref" />
+        <option value="funlen" />
+        <option value="cyclop" />
+        <option value="gocritic" />
+        <option value="goconst" />
+        <option value="errcheck" />
+        <option value="gocognit" />
+        <option value="ineffassign" />
+        <option value="revive" />
+        <option value="prealloc" />
+        <option value="durationcheck" />
         <option value="staticcheck" />
         <option value="interfacer" />
         <option value="govet" />
         <option value="dupl" />
-        <option value="funlen" />
         <option value="errorlint" />
-        <option value="gocritic" />
-        <option value="goconst" />
-        <option value="gocognit" />
-        <option value="ineffassign" />
+        <option value="dupword" />
         <option value="bodyclose" />
         <option value="gosec" />
         <option value="maligned" />
         <option value="stylecheck" />
-        <option value="revive" />
         <option value="whitespace" />
         <option value="goprintffuncname" />
         <option value="gosimple" />
-        <option value="prealloc" />
         <option value="gocyclo" />
       </list>
     </option>

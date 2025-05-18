@@ -5,10 +5,10 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"hammerclock/internal/hammerclock/logging"
 	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/rules"
-	"hammerclock/internal/hammerclock/ui"
 )
 
 // Message represents a message that can be sent to the Update function
@@ -135,7 +135,7 @@ func handleEndGame(model Model) (Model, Command) {
 			newModel.Players[i].CurrentPhase = 0
 
 			// Clear the action log
-			newModel.Players[i].ActionLog = []ui.LogEntry{}
+			newModel.Players[i].ActionLog = []logging.LogEntry{}
 
 			// Keep turn state of player 1
 			if i == 0 {

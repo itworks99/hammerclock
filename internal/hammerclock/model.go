@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"hammerclock/internal/hammerclock/logging"
 	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
-	"hammerclock/internal/hammerclock/ui"
 )
 
 // Model represents the entire application state
@@ -30,7 +30,7 @@ type Player struct {
 	CurrentPhase int           // Current phase of the game for this player
 	TurnCount    int           // Counter to track number of turns completed
 	ArmyList     []Unit
-	ActionLog    []ui.LogEntry // Log of player actions during the game
+	ActionLog    []logging.LogEntry // Log of player actions during the game
 }
 
 // Unit represents a unit in a player's army
@@ -76,7 +76,7 @@ func NewModel() Model {
 			TimeElapsed:  0,
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
-			ActionLog:    []ui.LogEntry{}, // Initialize empty action log
+			ActionLog:    []logging.LogEntry{}, // Initialize empty action log
 		}
 
 		// Add initial log entry

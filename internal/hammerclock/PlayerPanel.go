@@ -175,7 +175,7 @@ func AddLogEntry(player *Player, model *Model, format string, args ...any) {
 		currentPhase = model.Options.Rules[model.Options.Default].Phases[player.CurrentPhase]
 	}
 
-	logEntry := ui.LogEntry{
+	logEntry := logging.LogEntry{
 		DateTime:   time.Now().Local().Format(hammerclockConfig.DefaultLogDateTimeFormat),
 		PlayerName: player.Name,
 		Turn:       player.TurnCount,
@@ -187,5 +187,5 @@ func AddLogEntry(player *Player, model *Model, format string, args ...any) {
 	player.ActionLog = append(player.ActionLog, logEntry)
 
 	// Write to file using the buffered logging system if enabled
-	logging.WriteLogEntry(logEntry, model.Options.LoggingEnabled)
+	logging.AddLogEntry(logEntry, model.Options.LoggingEnabled)
 }

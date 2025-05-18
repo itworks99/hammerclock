@@ -11,7 +11,6 @@ import (
 	"hammerclock/internal/hammerclock/logging"
 	options2 "hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
-	"hammerclock/internal/hammerclock/ui"
 )
 
 // CLI usage information
@@ -67,14 +66,7 @@ func main() {
 			IsTurn:       i == 0,
 			CurrentPhase: 0,
 			TurnCount:    0,
-			ActionLog:    []ui.LogEntry{},
-		}
-
-		// Add initial player log message
-		if i == 0 {
-			createInitialLog(players[i], &model, "Initialized - active player")
-		} else {
-			createInitialLog(players[i], &model, "Initialized")
+			ActionLog:    []logging.LogEntry{},
 		}
 	}
 	model.Players = players
@@ -160,27 +152,4 @@ func main() {
 	// Clean up when the application exits
 	close(done)
 	logging.Cleanup()
-}
-
-// createInitialLog adds initial log entries for players at startup
-func createInitialLog(player *hammerclock.Player, model *hammerclock.Model, format string, args ...any) {
-	currentPhase := ""
-	if player.CurrentPhase < len(model.Options.Rules[model.Options.Default].Phases) && player.CurrentPhase >= 0 {
-		currentPhase = model.Options.Rules[model.Options.Default].Phases[player.CurrentPhase]
-	}
-
-	logEntry := ui.LogEntry{
-		DateTime:   time.Now().Local().Format(hammerclockConfig.DefaultLogDateTimeFormat),
-		PlayerName: player.Name,
-		Turn:       player.TurnCount,
-		Phase:      currentPhase,
-		Message:    fmt.Sprintf(format, args...),
-	}
-
-	// Add to in-memory player action log for UI
-	player.ActionLog = append(player.ActionLog, logEntry)
-
-	// Always log initialization messages to CSV regardless of LoggingEnabled setting
-	// This ensures the log file is created at startup even if logging is disabled
-	logging.WriteLogEntry(logEntry, true)
 }

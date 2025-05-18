@@ -94,10 +94,10 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	// CreateAboutPanel checkbox for CSV logging
 	csvLogBox := tview.NewCheckbox().
 		SetLabel("Enable CSV Logging: ").
-		SetChecked(model.Options.EnableCSVLog).
+		SetChecked(model.Options.LoggingEnabled).
 		SetLabelColor(model.CurrentColorPalette.White)
 	csvLogBox.SetChangedFunc(func(checked bool) {
-		msgChan <- &SetEnableCSVLogMsg{Value: checked}
+		msgChan <- &SetEnableLogMsg{Value: checked}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 

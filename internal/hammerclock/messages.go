@@ -73,8 +73,8 @@ type SetOneTurnForAllPlayersMsg struct {
 	Value bool
 }
 
-// SetEnableCSVLogMsg is sent when the user toggles CSV logging
-type SetEnableCSVLogMsg struct {
+// SetEnableLogMsg is sent when the user toggles CSV logging
+type SetEnableLogMsg struct {
 	Value bool
 }
 

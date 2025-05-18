@@ -8,8 +8,8 @@ import (
 
 	"hammerclock/internal/hammerclock"
 	"hammerclock/internal/hammerclock/config"
-	"hammerclock/internal/hammerclock/fileio"
 	"hammerclock/internal/hammerclock/logging"
+	options2 "hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/ui"
 )
@@ -23,7 +23,7 @@ Usage:
   hammerclock [options]
 
 options:
-  -o <file>    Specify a custom options file (default: defaultRules.json)
+  -o <file>    Specify a custom options file (default: default.json)
   -h, --help   Show this help message
 
 Examples:
@@ -46,7 +46,7 @@ func main() {
 	flag.Parse()
 
 	// Load options from file
-	options := fileio.LoadOptions(*optionsFileFlag)
+	options := options2.LoadOptions(*optionsFileFlag)
 
 	// CreateAboutPanel the model
 	model := hammerclock.NewModel()
@@ -118,7 +118,7 @@ func main() {
 				updatedModel, cmd := hammerclock.Update(msg, model)
 				model = updatedModel
 
-				_ = fileio.SaveOptions(model.Options, "", true)
+				_ = options2.SaveOptions(model.Options, "", true)
 
 				view.App.QueueUpdateDraw(func() {
 					view.Render(&model)
@@ -180,7 +180,7 @@ func createInitialLog(player *hammerclock.Player, model *hammerclock.Model, form
 	// Add to in-memory player action log for UI
 	player.ActionLog = append(player.ActionLog, logEntry)
 
-	// Always log initialization messages to CSV regardless of EnableCSVLog setting
+	// Always log initialization messages to CSV regardless of LoggingEnabled setting
 	// This ensures the log file is created at startup even if logging is disabled
 	logging.WriteLogEntry(logEntry, true)
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"hammerclock/internal/hammerclock/fileio"
+	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/rules"
 	"hammerclock/internal/hammerclock/ui"
@@ -62,11 +62,11 @@ func Update(msg Message, model Model) (Model, Command) {
 		return handleSetTimeFormat(msg, model)
 	case *SetOneTurnForAllPlayersMsg:
 		return handleSetOneTurnForAllPlayers(msg, model)
-	case *SetEnableCSVLogMsg:
+	case *SetEnableLogMsg:
 		newModel := model
-		newModel.Options.EnableCSVLog = msg.Value
+		newModel.Options.LoggingEnabled = msg.Value
 		// Persist options to disk
-		_ = fileio.SaveOptions(newModel.Options, "", true)
+		_ = options.SaveOptions(newModel.Options, "", true)
 		return newModel, NoCommand
 	default:
 		return model, NoCommand

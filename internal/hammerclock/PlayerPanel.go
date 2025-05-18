@@ -187,5 +187,5 @@ func AddLogEntry(player *Player, model *Model, format string, args ...any) {
 	player.ActionLog = append(player.ActionLog, logEntry)
 
 	// Write to file using the buffered logging system if enabled
-	logging.WriteLogEntry(logEntry, model.Options.EnableCSVLog)
+	logging.WriteLogEntry(logEntry, model.Options.LoggingEnabled)
 }

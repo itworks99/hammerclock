@@ -78,13 +78,6 @@ func NewModel() Model {
 			CurrentPhase: 0,
 			ActionLog:    []logging.LogEntry{}, // Initialize empty action log
 		}
-
-		// Add initial log entry
-		if i == 0 {
-			addLogEntry(players[i], &model, "Initialized - active player")
-		} else {
-			addLogEntry(players[i], &model, "Initialized")
-		}
 	}
 
 	return model

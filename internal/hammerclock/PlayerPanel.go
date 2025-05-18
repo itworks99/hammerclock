@@ -186,6 +186,6 @@ func addLogEntry(player *Player, model *Model, format string, args ...any) {
 	// Add to in-memory player action log for UI
 	player.ActionLog = append(player.ActionLog, logEntry)
 
-	// Write to file using the buffered logging system if enabled
-	logging.AddLogEntry(logEntry, model.Options.LoggingEnabled)
+	// Send log entry to the logging channel
+	logging.SendLogEntry(logEntry)
 }

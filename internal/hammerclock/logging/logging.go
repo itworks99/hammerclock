@@ -37,7 +37,7 @@ func Initialise() {
 		}()
 
 		for entry := range logChannel {
-			WriteLogEntry(entry)
+			writeLogEntry(entry)
 		}
 	}()
 	logInitialized = true
@@ -57,13 +57,8 @@ func Cleanup() {
 	logInitialized = false
 }
 
-// AddLogEntry sends a log entry to the buffered channel if enableLogging is true
-func AddLogEntry(entry LogEntry, enableLogging bool) {
-	if !enableLogging {
-		// Skip logging but print debug info if in debug mode
-		return
-	}
-
+// SendLogEntry sends a log entry to the buffered channel if enableLogging is true
+func SendLogEntry(entry LogEntry) {
 	// Make sure logging is initialized
 	if !logInitialized {
 		Initialise()
@@ -78,8 +73,8 @@ func AddLogEntry(entry LogEntry, enableLogging bool) {
 	}
 }
 
-// WriteLogEntry appends a LogEntry to logs.csv in CSV format.
-func WriteLogEntry(entry LogEntry) {
+// writeLogEntry appends a LogEntry to logs.csv in CSV format.
+func writeLogEntry(entry LogEntry) {
 	// Use default log directory (current working directory)
 	logDir := "."
 	fileName := "logs.csv"

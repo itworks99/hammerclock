@@ -20,8 +20,8 @@ type Options struct {
 	LoggingEnabled bool          `json:"loggingEnabled"` // Enable/disable CSV logging
 }
 
-// DefaultPlayerNames Generate default player names
-func DefaultPlayerNames() []string {
+// defaultPlayerNames Generate default player names
+func defaultPlayerNames() []string {
 	var playerNames []string
 	for i := range hammerclockConfig.DefaultPlayerCount {
 		playerNames = append(playerNames, hammerclockConfig.DefaultPlayerPrefix+" "+string(rune(i+1)))
@@ -34,7 +34,7 @@ var DefaultOptions = Options{
 	Default:        0,
 	Rules:          rules.AllRules,
 	PlayerCount:    hammerclockConfig.DefaultPlayerCount,
-	PlayerNames:    DefaultPlayerNames(),
+	PlayerNames:    defaultPlayerNames(),
 	ColorPalette:   hammerclockConfig.DefaultColorPalette,
 	TimeFormat:     "AMPM",
 	LoggingEnabled: true, // CSV logging enabled by default

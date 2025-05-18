@@ -101,18 +101,18 @@ func updateStatusPanel(panel *tview.Flex, status string, model *Model) {
 	ui.UpdateWithGameTime(panel, status, model.TotalGameTime)
 
 	switch model.GameStatus {
-	case GameNotStarted:
+	case gameNotStarted:
 		panel.SetBorderColor(model.CurrentColorPalette.Cyan)
-	case GameInProgress:
+	case gameInProgress:
 		panel.SetBorderColor(model.CurrentColorPalette.Green)
-	case GamePaused:
+	case gamePaused:
 		panel.SetBorderColor(model.CurrentColorPalette.Yellow)
 	}
 }
 
 // updateMenuText updates the bottom menu text based on the current game status.
 // It modifies the description of menu options dynamically.
-func updateMenuText(menu *tview.TextView, status GameStatus) {
+func updateMenuText(menu *tview.TextView, status gameStatus) {
 	instructions := []ui.MenuOption{
 		{Key: "S", Description: "Start Game"},
 		{Key: "E", Description: "End Game"},
@@ -125,9 +125,9 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 	for i := range instructions {
 		if instructions[i].Key == "S" {
 			switch status {
-			case GameInProgress:
+			case gameInProgress:
 				instructions[i].Description = "Pause Game"
-			case GamePaused:
+			case gamePaused:
 				instructions[i].Description = "Resume Game"
 			}
 		}
@@ -141,7 +141,7 @@ func updateMenuText(menu *tview.TextView, status GameStatus) {
 
 		// Special case for End Game option - dimmed and only visible when game started
 		if option.Key == "E" {
-			if status == GameNotStarted {
+			if status == gameNotStarted {
 				// Skip the End Game option when game hasn't started
 				continue
 			}
@@ -188,7 +188,7 @@ func createPlayerPanels(model *Model) (*tview.Flex, []*tview.Flex) {
 	colors := []string{"blue", "yellow", "green", "red"}
 
 	for i, player := range model.Players {
-		panel := CreatePlayerPanel(player, colors[i%len(colors)], model)
+		panel := createPlayerPanel(player, colors[i%len(colors)], model)
 		playerPanels[i] = panel
 		container.AddItem(panel, 0, 1, false)
 	}
@@ -196,7 +196,7 @@ func createPlayerPanels(model *Model) (*tview.Flex, []*tview.Flex) {
 }
 
 // createBottomMenu creates the bottom menu bar and initializes its text.
-func createBottomMenu(status GameStatus) *tview.TextView {
+func createBottomMenu(status gameStatus) *tview.TextView {
 	menu := ui.CreateMenuBar(nil).SetDynamicColors(true)
 	updateMenuText(menu, status)
 	return menu

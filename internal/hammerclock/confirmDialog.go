@@ -11,9 +11,9 @@ func CreateEndGameConfirmationModal(view *View) *tview.Modal {
 		AddButtons([]string{"Yes", "No"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonIndex == 0 { // "Yes" is the first button (index 0)
-				view.MessageChan <- &EndGameConfirmMsg{Confirmed: true}
+				view.MessageChan <- &endGameConfirmMsg{Confirmed: true}
 			} else {
-				view.MessageChan <- &EndGameConfirmMsg{Confirmed: false}
+				view.MessageChan <- &endGameConfirmMsg{Confirmed: false}
 			}
 		})
 

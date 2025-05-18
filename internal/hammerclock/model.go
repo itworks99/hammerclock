@@ -14,7 +14,7 @@ type Model struct {
 	// Game state
 	Players             []*Player
 	Phases              []string
-	GameStatus          GameStatus
+	GameStatus          gameStatus
 	CurrentScreen       string // Can be "main", "options", or "about"
 	GameStarted         bool
 	Options             options.Options
@@ -29,23 +29,23 @@ type Player struct {
 	IsTurn       bool          // Indicates if it's this player's turn
 	CurrentPhase int           // Current phase of the game for this player
 	TurnCount    int           // Counter to track number of turns completed
-	ArmyList     []Unit
+	ArmyList     []unit
 	ActionLog    []logging.LogEntry // Log of player actions during the game
 }
 
-// Unit represents a unit in a player's army
-type Unit struct {
+// unit represents a unit in a player's army
+type unit struct {
 	Name   string
 	Points int
 }
 
-// GameStatus represents the current state of the game
-type GameStatus string
+// gameStatus represents the current state of the game
+type gameStatus string
 
 const (
-	GameNotStarted GameStatus = "Game Not Started"
-	GameInProgress GameStatus = "Game In Progress"
-	GamePaused     GameStatus = "Game Paused"
+	gameNotStarted gameStatus = "Game Not Started"
+	gameInProgress gameStatus = "Game In Progress"
+	gamePaused     gameStatus = "Game Paused"
 )
 
 // NewModel creates a new model with default values
@@ -58,7 +58,7 @@ func NewModel() Model {
 	model := Model{
 		Players:             players,
 		Phases:              opts.Rules[opts.Default].Phases,
-		GameStatus:          GameNotStarted,
+		GameStatus:          gameNotStarted,
 		CurrentScreen:       "main",
 		GameStarted:         false,
 		Options:             opts,
@@ -81,9 +81,9 @@ func NewModel() Model {
 
 		// Add initial log entry
 		if i == 0 {
-			AddLogEntry(players[i], &model, "Initialized - active player")
+			addLogEntry(players[i], &model, "Initialized - active player")
 		} else {
-			AddLogEntry(players[i], &model, "Initialized")
+			addLogEntry(players[i], &model, "Initialized")
 		}
 	}
 

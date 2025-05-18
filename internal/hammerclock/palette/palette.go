@@ -29,8 +29,8 @@ var K9sPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(0, 0, 0),       // Black for default backgrounds
 }
 
-// DraculaPalette Dracula color palette
-var DraculaPalette = ColorPalette{
+// draculaPalette Dracula color palette
+var draculaPalette = ColorPalette{
 	Blue:     tcell.NewRGBColor(189, 147, 249), // Purple
 	Cyan:     tcell.NewRGBColor(139, 233, 253), // Cyan
 	White:    tcell.NewRGBColor(248, 248, 242), // Foreground
@@ -41,8 +41,8 @@ var DraculaPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(40, 42, 54),    // Background
 }
 
-// MonokaiPalette Monokai color palette
-var MonokaiPalette = ColorPalette{
+// monokaiPalette Monokai color palette
+var monokaiPalette = ColorPalette{
 	Blue:     tcell.NewRGBColor(102, 217, 239), // Blue
 	Cyan:     tcell.NewRGBColor(102, 217, 239), // Blue (same as Blue for Monokai)
 	White:    tcell.NewRGBColor(248, 248, 242), // Foreground
@@ -53,8 +53,8 @@ var MonokaiPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(39, 40, 34),    // Background
 }
 
-// WarhammerPalette represents the color theme for Warhammer 40K
-var WarhammerPalette = ColorPalette{
+// warhammerPalette represents the color theme for Warhammer 40K
+var warhammerPalette = ColorPalette{
 	Blue:     tcell.NewRGBColor(38, 57, 132),   // Ultramarine Blue
 	Cyan:     tcell.NewRGBColor(23, 155, 215),  // Tyranid Blue
 	White:    tcell.NewRGBColor(255, 250, 240), // Imperial White
@@ -65,8 +65,8 @@ var WarhammerPalette = ColorPalette{
 	Black:    tcell.NewRGBColor(10, 10, 10),    // Abaddon Black
 }
 
-// KillTeamPalette represents the color theme for Kill Team
-var KillTeamPalette = ColorPalette{
+// killTeamPalette represents the color theme for Kill Team
+var killTeamPalette = ColorPalette{
 	Blue:     tcell.NewRGBColor(63, 81, 153),   // Night Lords Blue
 	Cyan:     tcell.NewRGBColor(0, 169, 157),   // Tactical Turquoise
 	White:    tcell.NewRGBColor(230, 230, 230), // Tactical White
@@ -92,13 +92,13 @@ func ColorPalettes() []string {
 func ColorPaletteByName(name string) ColorPalette {
 	switch name {
 	case "dracula":
-		return DraculaPalette
+		return draculaPalette
 	case "monokai":
-		return MonokaiPalette
+		return monokaiPalette
 	case "warhammer":
-		return WarhammerPalette
+		return warhammerPalette
 	case "killteam":
-		return KillTeamPalette
+		return killTeamPalette
 	default: // "k9s" or any other value defaults to k9s
 		return K9sPalette
 	}

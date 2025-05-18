@@ -9,7 +9,7 @@ import (
 	"hammerclock/internal/hammerclock"
 	"hammerclock/internal/hammerclock/config"
 	"hammerclock/internal/hammerclock/logging"
-	options2 "hammerclock/internal/hammerclock/options"
+	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
 )
 
@@ -37,28 +37,28 @@ func main() {
 	fmt.Println("Logs will be written to logs.csv in the current directory")
 
 	// Parse command line flags
-	optionsFileFlag := flag.String("o", hammerclockConfig.DefaultOptionsFilename, "Path to the options file")
+	optionsFileFlag := flag.String("o", hammerclockConfig.DefaultOptionsFilename, "Path to the loadedOptions file")
 	flag.Usage = func() {
 		//goland:noinspection GoUnhandledErrorResult
 		fmt.Fprintln(os.Stderr, cliUsage)
 	}
 	flag.Parse()
 
-	// Load options from file
-	options := options2.LoadOptions(*optionsFileFlag)
+	// Load loadedOptions from file
+	loadedOptions := options.LoadOptions(*optionsFileFlag)
 
 	// CreateAboutPanel the model
 	model := hammerclock.NewModel()
-	model.Options = options
-	model.Phases = options.Rules[options.Default].Phases
-	model.CurrentColorPalette = palette.ColorPaletteByName(options.ColorPalette)
+	model.Options = loadedOptions
+	model.Phases = loadedOptions.Rules[loadedOptions.Default].Phases
+	model.CurrentColorPalette = palette.ColorPaletteByName(loadedOptions.ColorPalette)
 
-	// CreateAboutPanel players based on options
-	players := make([]*hammerclock.Player, options.PlayerCount)
-	for i := 0; i < options.PlayerCount; i++ {
+	// CreateAboutPanel players based on loadedOptions
+	players := make([]*hammerclock.Player, loadedOptions.PlayerCount)
+	for i := 0; i < loadedOptions.PlayerCount; i++ {
 		playerName := fmt.Sprintf("Player %d", i+1)
-		if i < len(options.PlayerNames) {
-			playerName = options.PlayerNames[i]
+		if i < len(loadedOptions.PlayerNames) {
+			playerName = loadedOptions.PlayerNames[i]
 		}
 		players[i] = &hammerclock.Player{
 			Name:         playerName,
@@ -110,7 +110,7 @@ func main() {
 				updatedModel, cmd := hammerclock.Update(msg, model)
 				model = updatedModel
 
-				_ = options2.SaveOptions(model.Options, "", true)
+				_ = options.SaveOptions(model.Options, "", true)
 
 				view.App.QueueUpdateDraw(func() {
 					view.Render(&model)

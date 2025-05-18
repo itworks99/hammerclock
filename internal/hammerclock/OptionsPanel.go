@@ -34,7 +34,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	rulesetBox.SetSelectedFunc(func(option string, index int) {
-		msgChan <- &SetRulesetMsg{Index: index}
+		msgChan <- &setRulesetMsg{Index: index}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -48,7 +48,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 	// Set the changed function after initialization, not during
 	playerCountBox.SetChangedFunc(func(text string) {
 		if count, err := strconv.Atoi(text); err == nil && count > 0 {
-			msgChan <- &SetPlayerCountMsg{Count: count}
+			msgChan <- &setPlayerCountMsg{Count: count}
 			updateRulesetContent(model, currentRulesetContentBox)
 		}
 	})
@@ -64,7 +64,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	colorPaletteBox.SetSelectedFunc(func(option string, index int) {
-		msgChan <- &SetColorPaletteMsg{Name: option}
+		msgChan <- &setColorPaletteMsg{Name: option}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -76,7 +76,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	timeFormatBox.SetSelectedFunc(func(option string, index int) {
-		msgChan <- &SetTimeFormatMsg{Format: option}
+		msgChan <- &setTimeFormatMsg{Format: option}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -87,7 +87,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetLabelColor(model.CurrentColorPalette.White)
 	// Set the changed function after initialization
 	oneTurnForAllPlayersBox.SetChangedFunc(func(checked bool) {
-		msgChan <- &SetOneTurnForAllPlayersMsg{Value: checked}
+		msgChan <- &setOneTurnForAllPlayersMsg{Value: checked}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -97,7 +97,7 @@ func createOptionsScreen(model *Model, msgChan chan<- Message) *tview.Grid {
 		SetChecked(model.Options.LoggingEnabled).
 		SetLabelColor(model.CurrentColorPalette.White)
 	csvLogBox.SetChangedFunc(func(checked bool) {
-		msgChan <- &SetEnableLogMsg{Value: checked}
+		msgChan <- &setEnableLogMsg{Value: checked}
 		updateRulesetContent(model, currentRulesetContentBox)
 	})
 
@@ -218,7 +218,10 @@ func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
 
 	// Preallocate player names slice
 	if len(model.Options.PlayerNames) < model.Options.PlayerCount {
-		model.Options.PlayerNames = append(model.Options.PlayerNames, make([]string, model.Options.PlayerCount-len(model.Options.PlayerNames))...)
+		model.Options.PlayerNames = append(
+			model.Options.PlayerNames,
+			make([]string, model.Options.PlayerCount-len(model.Options.PlayerNames))...,
+		)
 	}
 
 	for i := 0; i < model.Options.PlayerCount; i++ {
@@ -237,7 +240,7 @@ func createPlayerNameFields(model *Model, msgChan chan<- Message) *tview.Grid {
 		// Store index in a closure to avoid variable capture issues
 		idx := i
 		inputField.SetChangedFunc(func(text string) {
-			msgChan <- &SetPlayerNameMsg{
+			msgChan <- &setPlayerNameMsg{
 				Index: idx,
 				Name:  strings.TrimSpace(text),
 			}

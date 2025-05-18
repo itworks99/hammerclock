@@ -22,15 +22,15 @@ func CreateLogView() *tview.TextView {
 // CreateLogContainer wraps the log view in a container with auto-scroll and input handling.
 func CreateLogContainer(logView *tview.TextView) *tview.Flex {
 	logView.SetChangedFunc(func() { logView.ScrollToEnd() }) // Auto-scroll on content change.
-	SetupLogViewInputHandling(logView)                       // Enable mouse scrolling.
+	setupLogViewInputHandling(logView)                       // Enable mouse scrolling.
 
 	return tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(logView, 0, 1, true)
 }
 
-// SetupLogViewInputHandling enables mouse scrolling for the log view.
-func SetupLogViewInputHandling(logView *tview.TextView) {
+// setupLogViewInputHandling enables mouse scrolling for the log view.
+func setupLogViewInputHandling(logView *tview.TextView) {
 	logView.SetMouseCapture(func(action tview.MouseAction, event *tcell.EventMouse) (tview.MouseAction, *tcell.EventMouse) {
 		row, _ := logView.GetScrollOffset()
 		switch action {
@@ -80,7 +80,7 @@ func SetLogContent(logView *tview.TextView, logEntries interface{}) {
 func formatLogEntry(entry interface{}) string {
 	switch e := entry.(type) {
 	case logging.LogEntry:
-		return DisplayLogEntry(e) + "\n"
+		return displayLogEntry(e) + "\n"
 	case fmt.Stringer:
 		return e.String() + "\n"
 	default:
@@ -102,8 +102,8 @@ func tryGetSlice(obj interface{}) ([]interface{}, bool) {
 	return result, true
 }
 
-// DisplayLogEntry returns a simplified string representation for UI display.
-func DisplayLogEntry(le logging.LogEntry) string {
+// displayLogEntry returns a simplified string representation for UI display.
+func displayLogEntry(le logging.LogEntry) string {
 	if spaceIdx := strings.Index(le.DateTime, " "); spaceIdx != -1 {
 		return fmt.Sprintf("[%s] %s", le.DateTime[spaceIdx+1:], le.Message)
 	}

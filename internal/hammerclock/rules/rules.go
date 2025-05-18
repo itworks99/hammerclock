@@ -10,60 +10,95 @@ type Rules struct {
 
 // AllRules contains all the rules available in the application
 var AllRules = []Rules{
-	WarhammerRules,
-	KillTeamRules,
-	NecromundaRules,
-	AgeOfSigmarRules,
-	WarcryRules,
-	BloodBowlRules,
-	BunnyKingdomRules,
-	ChessRules,
+	warhammerRules,
+	killTeamRules,
+	necromundaRules,
+	ageOfSigmarRules,
+	warcryRules,
+	bloodBowlRules,
+	bunnyKingdomRules,
+	chessRules,
 }
 
-// WarhammerRules Warhammer rules
-var WarhammerRules = Rules{
-	Name:                 "Warhammer 40K (10th Edition)",
-	Phases:               []string{"Command Phase", "Movement Phase", "Shooting Phase", "Charge Phase", "Fight Phase", "End Phase"},
+// warhammerRules Warhammer rules
+var warhammerRules = Rules{
+	Name: "Warhammer 40K (10th Edition)",
+	Phases: []string{
+		"Command Phase",
+		"Movement Phase",
+		"Shooting Phase",
+		"Charge Phase",
+		"Fight Phase",
+		"End Phase",
+	},
 	OneTurnForAllPlayers: false,
 }
 
-// KillTeamRules Kill Team rules
-var KillTeamRules = Rules{
-	Name:                 "Kill Team (2021)",
-	Phases:               []string{"Initiative Phase", "Movement Phase", "Shooting Phase", "Fight Phase", "Morale Phase"},
+// killTeamRules Kill Team rules
+var killTeamRules = Rules{
+	Name: "Kill Team (2021)",
+	Phases: []string{
+		"Initiative Phase",
+		"Movement Phase",
+		"Shooting Phase",
+		"Fight Phase",
+		"Morale Phase",
+	},
 	OneTurnForAllPlayers: false,
 }
 
-// NecromundaRules Necromunda rules
-var NecromundaRules = Rules{
-	Name:                 "Necromunda (2022 edition)",
-	Phases:               []string{"Recovery Phase", "Action Phase", "End Phase"},
+// necromundaRules Necromunda rules
+var necromundaRules = Rules{
+	Name: "Necromunda (2022 edition)",
+	Phases: []string{
+		"Recovery Phase",
+		"Action Phase",
+		"End Phase",
+	},
 	OneTurnForAllPlayers: false,
 }
 
-// AgeOfSigmarRules Age of Sigmar rules
-var AgeOfSigmarRules = Rules{
-	Name:                 "Age of Sigmar (4th Edition)",
-	Phases:               []string{"Start of Turn Phase", "Hero Phase", "Movement Phase", "Shooting Phase", "Charge Phase", "Combat Phase", "End of Turn Phase"},
+// ageOfSigmarRules Age of Sigmar rules
+var ageOfSigmarRules = Rules{
+	Name: "Age of Sigmar (4th Edition)",
+	Phases: []string{
+		"Start of Turn Phase",
+		"Hero Phase",
+		"Movement Phase",
+		"Shooting Phase",
+		"Charge Phase",
+		"Combat Phase",
+		"End of Turn Phase",
+	},
 	OneTurnForAllPlayers: false,
 }
 
-// WarcryRules Warcry rules
-var WarcryRules = Rules{
-	Name:                 "Warcry (3rd edition)",
-	Phases:               []string{"Set Up Phase", "Players' Phase (activating models alternately)", "End Phase"},
+// warcryRules Warcry rules
+var warcryRules = Rules{
+	Name: "Warcry (3rd edition)",
+	Phases: []string{
+		"Set Up Phase",
+		"Players' Phase (activating models alternately)",
+		"End Phase",
+	},
 	OneTurnForAllPlayers: false,
 }
 
-// BloodBowlRules Blood Bowl rules
-var BloodBowlRules = Rules{
-	Name:                 "Blood Bowl (2020 edition)",
-	Phases:               []string{"Pre-Match Phase", "Kick-Off Phase", "Team Turn (both teams alternate)", "End of Turn Phase", "Post-Match Phase"},
+// bloodBowlRules Blood Bowl rules
+var bloodBowlRules = Rules{
+	Name: "Blood Bowl (2020 edition)",
+	Phases: []string{
+		"Pre-Match Phase",
+		"Kick-Off Phase",
+		"Team Turn (both teams alternate)",
+		"End of Turn Phase",
+		"Post-Match Phase",
+	},
 	OneTurnForAllPlayers: false,
 }
 
-// BunnyKingdomRules Bunny Kingdom rules
-var BunnyKingdomRules = Rules{
+// bunnyKingdomRules Bunny Kingdom rules
+var bunnyKingdomRules = Rules{
 	Name: "Bunny Kingdom",
 	Phases: []string{"Draft Phase (players select cards)",
 		"Build Phase (place cards on the board)",
@@ -71,8 +106,8 @@ var BunnyKingdomRules = Rules{
 	OneTurnForAllPlayers: false,
 }
 
-// ChessRules Chess rules
-var ChessRules = Rules{
+// chessRules Chess rules
+var chessRules = Rules{
 	Name:                 "Chess",
 	Phases:               []string{},
 	OneTurnForAllPlayers: true,

@@ -12,8 +12,8 @@ import (
 	"hammerclock/internal/hammerclock/ui"
 )
 
-// CreatePlayerPanel creates a player panel
-func CreatePlayerPanel(player *Player, color string, model *Model) *tview.Flex {
+// createPlayerPanel creates a player panel
+func createPlayerPanel(player *Player, color string, model *Model) *tview.Flex {
 	panel := tview.NewFlex().SetDirection(tview.FlexRow)
 	upper := tview.NewFlex().SetDirection(tview.FlexRow)
 	lower := tview.NewFlex().SetDirection(tview.FlexRow)
@@ -168,8 +168,8 @@ func updatePlayerPanels(players []*Player, panels []*tview.Flex, model *Model) {
 	}
 }
 
-// AddLogEntry adds a log entry to a player's action log
-func AddLogEntry(player *Player, model *Model, format string, args ...any) {
+// addLogEntry adds a log entry to a player's action log
+func addLogEntry(player *Player, model *Model, format string, args ...any) {
 	currentPhase := ""
 	if player.CurrentPhase < len(model.Options.Rules[model.Options.Default].Phases) && player.CurrentPhase >= 0 {
 		currentPhase = model.Options.Rules[model.Options.Default].Phases[player.CurrentPhase]

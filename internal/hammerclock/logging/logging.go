@@ -61,8 +61,8 @@ func Cleanup() {
 	logInitialized = false
 }
 
-// SendLogEntry sends a log entry to the buffered channel if enableLogging is true
-func SendLogEntry(entry common.LogEntry) {
+// sendLogEntry sends a log entry to the buffered channel if enableLogging is true
+func sendLogEntry(entry common.LogEntry) {
 	// Make sure logging is initialized
 	if !logInitialized {
 		Initialise()
@@ -80,22 +80,10 @@ func SendLogEntry(entry common.LogEntry) {
 // writeLogEntry appends a LogEntry to logs.csv in CSV format.
 func writeLogEntry(entry common.LogEntry) {
 	// Use default log directory (current working directory)
-	logDir := "."
-	fileName := "logs.csv"
-	filePath := fileName
+	logDir := hammerclockConfig.DefaultLogFilePath
+	fileName := hammerclockConfig.DefaultLogFileName
 
-	// If an environment variable for log directory is set, use it
-	if envLogDir := os.Getenv("HAMMERCLOCK_LOG_DIR"); envLogDir != "" {
-		logDir = envLogDir
-		filePath = filepath.Join(logDir, fileName)
-
-		// Ensure the directory exists
-		if err := os.MkdirAll(logDir, 0755); err != nil {
-			fmt.Printf("Error creating log directory %s: %v\n", logDir, err)
-			// Fall back to current directory
-			filePath = fileName
-		}
-	}
+	filePath := filepath.Join(logDir, fileName)
 
 	fileExists := false
 
@@ -159,5 +147,5 @@ func AddLogEntry(player *common.Player, model *common.Model, format string, args
 	player.ActionLog = append(player.ActionLog, logEntry)
 
 	// Send log entry to the logging channel
-	SendLogEntry(logEntry)
+	sendLogEntry(logEntry)
 }

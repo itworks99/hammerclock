@@ -32,12 +32,10 @@ Examples:
 `
 
 func main() {
-	// Initialize logging
 	logging.Initialise()
 	fmt.Println("Hammerclock", hammerclockConfig.Version, "starting up...")
 	fmt.Println("Logs will be written to logs.csv in the current directory")
 
-	// Parse command line flags
 	optionsFileFlag := flag.String("o", hammerclockConfig.DefaultOptionsFilename, "Path to the loadedOptions file")
 	flag.Usage = func() {
 		//goland:noinspection GoUnhandledErrorResult
@@ -45,16 +43,13 @@ func main() {
 	}
 	flag.Parse()
 
-	// Load loadedOptions from file
 	loadedOptions := options.LoadOptions(*optionsFileFlag)
 
-	// CreateAboutPanel the model
 	model := hammerclock.NewModel()
 	model.Options = loadedOptions
 	model.Phases = loadedOptions.Rules[loadedOptions.Default].Phases
 	model.CurrentColorPalette = palette.ColorPaletteByName(loadedOptions.ColorPalette)
 
-	// CreateAboutPanel players based on loadedOptions
 	players := make([]*common.Player, loadedOptions.PlayerCount)
 	for i := 0; i < loadedOptions.PlayerCount; i++ {
 		playerName := fmt.Sprintf("Player %d", i+1)
@@ -72,17 +67,12 @@ func main() {
 	}
 	model.Players = players
 
-	// Set up message channel for communication between components
 	msgChan := make(chan common.Message)
 	done := make(chan struct{})
 
-	// CreateAboutPanel the view
 	view := hammerclock.NewView(&model, msgChan)
-
-	// Set up input capture to send key press messages
 	hammerclock.SetupInputCapture(view.App, msgChan)
 
-	// Start the ticker to send tick messages
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
@@ -90,7 +80,6 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				// Only update if the game is started
 				if model.GameStarted {
 					view.App.QueueUpdateDraw(func() {
 						view.UpdateClock(&model)
@@ -103,7 +92,6 @@ func main() {
 		}
 	}()
 
-	// Start the main update loop
 	go func() {
 		for {
 			select {
@@ -120,18 +108,17 @@ func main() {
 				if cmd != nil {
 					go func() {
 						if resultMsg := cmd(); resultMsg != nil {
-							// Special handling for ShowModalMsg
 							if showModal, ok := resultMsg.(*common.ShowModalMsg); ok {
 								view.App.QueueUpdateDraw(func() {
 									switch showModal.Type {
 									case "EndGameConfirm":
 										modal := hammerclock.CreateEndGameConfirmationModal(view)
-										view.ShowConfirmationModal(modal)
+										hammerclock.ShowConfirmationModal(view, modal)
 									}
 								})
 							} else if _, ok := resultMsg.(*common.RestoreMainUIMsg); ok {
 								view.App.QueueUpdateDraw(func() {
-									view.RestoreMainUI()
+									view.RestoreMainView()
 								})
 							} else {
 								msgChan <- resultMsg
@@ -145,12 +132,10 @@ func main() {
 		}
 	}()
 
-	// Start the application
-	if err := view.App.SetRoot(view.MainFlex, true).EnableMouse(true).Run(); err != nil {
+	if err := view.App.SetRoot(view.MainView, true).EnableMouse(true).Run(); err != nil {
 		fmt.Printf("Error running application: %v\n", err)
 	}
 
-	// Clean up when the application exits
 	close(done)
 	logging.Cleanup()
 }

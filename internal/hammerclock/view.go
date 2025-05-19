@@ -13,7 +13,7 @@ import (
 // View represents the main UI structure of the application.
 type View struct {
 	App                   *tview.Application    // The main tview application instance.
-	MainFlex              *tview.Flex           // The main container for the UI layout.
+	MainView              *tview.Flex           // The main container for the UI layout.
 	PlayerPanelsContainer *tview.Flex           // Container for player panels.
 	PlayerPanels          []*tview.Flex         // List of individual player panels.
 	TopMenu               *tview.TextView       // The top menu bar.
@@ -32,25 +32,25 @@ func NewView(model *common.Model, msgChan chan<- common.Message) *View {
 	app := tview.NewApplication()
 	palette.ApplyColorPalette(model.CurrentColorPalette)
 
-	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow)
+	mainView := tview.NewFlex().SetDirection(tview.FlexRow)
 	topFlex := createTopFlex(model)
-	mainFlex.AddItem(topFlex, 1, 0, false)
+	mainView.AddItem(topFlex, 1, 0, false)
 
 	playerPanelsContainer, playerPanels := createPlayerPanels(model)
-	mainFlex.AddItem(playerPanelsContainer, 0, 1, false)
+	mainView.AddItem(playerPanelsContainer, 0, 1, false)
 
 	optionsScreen := ui.CreateOptionsScreen(model, msgChan)
 	aboutScreen := ui.CreateAboutPanel(model.CurrentColorPalette.White)
 
 	statusPanel := ui.CreateStatusPanel(string(model.GameStatus), model.CurrentColorPalette.Cyan, model.CurrentColorPalette.Black)
-	mainFlex.AddItem(statusPanel, 3, 0, false)
+	mainView.AddItem(statusPanel, 3, 0, false)
 
 	bottomMenu := createBottomMenu(model.GameStatus)
-	mainFlex.AddItem(bottomMenu, 1, 0, false)
+	mainView.AddItem(bottomMenu, 1, 0, false)
 
 	return &View{
 		App:                   app,
-		MainFlex:              mainFlex,
+		MainView:              mainView,
 		PlayerPanelsContainer: playerPanelsContainer,
 		PlayerPanels:          playerPanels,
 		TopMenu:               topFlex.GetItem(0).(*tview.TextView),
@@ -66,34 +66,39 @@ func NewView(model *common.Model, msgChan chan<- common.Message) *View {
 
 // Render updates the UI based on the current model state.
 // It refreshes player panels, status panel, and menu text, and switches screens as needed.
-func (v *View) Render(model *common.Model) {
-	if model.CurrentScreen != v.CurrentScreen {
-		v.CurrentScreen = model.CurrentScreen
-		v.PlayerPanelsContainer.Clear()
+func (view *View) Render(model *common.Model) {
+	if model.CurrentScreen != view.CurrentScreen {
+		view.CurrentScreen = model.CurrentScreen
+		view.PlayerPanelsContainer.Clear()
 		switch model.CurrentScreen {
 		case "options":
-			v.PlayerPanelsContainer.AddItem(v.OptionsScreen, 0, 1, false)
+			view.PlayerPanelsContainer.AddItem(view.OptionsScreen, 0, 1, false)
 		case "about":
-			v.PlayerPanelsContainer.AddItem(v.AboutScreen, 0, 1, false)
+			view.PlayerPanelsContainer.AddItem(view.AboutScreen, 0, 1, false)
 		default:
-			for _, panel := range v.PlayerPanels {
-				v.PlayerPanelsContainer.AddItem(panel, 0, 1, false)
+			for _, panel := range view.PlayerPanels {
+				view.PlayerPanelsContainer.AddItem(panel, 0, 1, false)
 			}
 		}
 	}
 
-	ui.UpdatePlayerPanels(model.Players, v.PlayerPanels, model)
-	updateStatusPanel(v.StatusPanel, string(model.GameStatus), model)
-	updateMenuText(v.BottomMenu, model.GameStatus)
+	ui.UpdatePlayerPanels(model.Players, view.PlayerPanels, model)
+	updateStatusPanel(view.StatusPanel, string(model.GameStatus), model)
+	updateMenuText(view.BottomMenu, model.GameStatus)
 }
 
 // UpdateClock updates the clock display with the current time.
 // The time format is determined by the model's options.
-func (v *View) UpdateClock(model *common.Model) {
+func (view *View) UpdateClock(model *common.Model) {
 	currentTime := time.Now().Format(ui.TimeFormat(model.Options.TimeFormat))
-	if v.ClockDisplay.GetText(false) != currentTime {
-		v.ClockDisplay.SetText(currentTime)
+	if view.ClockDisplay.GetText(false) != currentTime {
+		view.ClockDisplay.SetText(currentTime)
 	}
+}
+
+// RestoreMainView sets the main view to the main view layout.
+func (view *View) RestoreMainView() {
+	view.App.SetRoot(view.MainView, true)
 }
 
 // updateStatusPanel updates the status panel with the current game status.
@@ -201,4 +206,48 @@ func createBottomMenu(status common.GameStatus) *tview.TextView {
 	menu := ui.CreateMenuBar(nil).SetDynamicColors(true)
 	updateMenuText(menu, status)
 	return menu
+}
+
+// CreateEndGameConfirmationModal creates a modal dialog asking for confirmation to end the game
+func CreateEndGameConfirmationModal(view *View) *tview.Modal {
+	modal := tview.NewModal().
+		SetText("Would you like to end the current game?").
+		AddButtons([]string{"Yes", "No"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonIndex == 0 { // "Yes" is the first button (index 0)
+				view.MessageChan <- &common.EndGameConfirmMsg{Confirmed: true}
+			} else {
+				view.MessageChan <- &common.EndGameConfirmMsg{Confirmed: false}
+			}
+		})
+
+	// Style the modal
+	modal.SetBorder(true)
+	modal.SetTitle(" Confirm End Game ")
+
+	return modal
+}
+
+// ShowConfirmationModal displays a confirmation modal in the application
+func ShowConfirmationModal(view *View, modal *tview.Modal) {
+	// Center the modal in a flex container
+	flex := tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(
+			tview.NewFlex().
+				SetDirection(tview.FlexRow).
+				AddItem(nil, 0, 1, false).
+				AddItem(modal, 10, 1, true).
+				AddItem(nil, 0, 1, false),
+			60, 1, true,
+		).
+		AddItem(nil, 0, 1, false)
+
+	// Create a new pages object to layer the modal over the main UI
+	pages := tview.NewPages().
+		AddPage("background", view.MainView, true, true).
+		AddPage("modal", flex, true, true)
+
+	// Set the pages as the application's root
+	view.App.SetRoot(pages, true)
 }

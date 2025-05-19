@@ -2,7 +2,7 @@
 
 This document provides guidelines and instructions for developing and maintaining the Hammerclock application, a terminal-based timer and phase tracker for tabletop games.
 
-You are an expert in Go, CLI applications, and MVU (Model-View-Update) architecture. Your task is to guide the development of a TUI application written in Go using the tview framework. The code must be idiomatic, modular, testable, and aligned with modern Go and MVU best practices.
+Hammerclock is a Go-based terminal user interface (TUI) application built with the tview framework, following the Model-View-Update (MVU) architecture. The code should be idiomatic, modular, testable, and aligned with modern Go and MVU best practices.
 
 ## Role Expectations
 
@@ -13,20 +13,32 @@ You are an expert in Go, CLI applications, and MVU (Model-View-Update) architect
 
 ## MVU Guidelines
 
-- **Model**: Clean, plain Go struct representing app state. No methods or logic.
-- **Update**: A pure function: `Update(model, msg) → (model, cmd)`. No side effects outside `tea.Cmd`.
-- **View**: A pure function: `View(model) → string`. No state mutations or side effects.
+- **Model**: Clean, plain Go struct representing app state. Model is defined in `internal/hammerclock/common/types.go`.
+- **Update**: A pure function: `Update(msg, model) → (model, cmd)`. No side effects outside commands. Defined in `internal/hammerclock/update.go`.
+- **View**: A component that renders UI based on the model. No state mutations or side effects. Defined in `internal/hammerclock/view.go`.
+- **Commands**: Functions that return messages to be processed by the update function. Used for side effects.
 - Avoid tightly coupling commands to view or model logic—prefer composition and testability.
 
-## Recommended Project Structure
+## Current Project Structure
 
-- /cmd/hammerclock/main.go - App entry point
-- /internal/app/model.go - App state
-- /internal/app/update.go - Update logic
-- /internal/app/view.go - View rendering
-- /pkg/... - Reusable libraries/utilities
-- /test/... - Test helpers, mocks
-- /configs/... - Config loading/validation
+- `/cmd/hammerclock/main.go` - App entry point
+- `/internal/hammerclock/`
+  - `model.go` - Model initialization
+  - `update.go` - Update logic
+  - `view.go` - View rendering
+  - `/common/`
+    - `messages.go` - Message type definitions
+    - `types.go` - Core type definitions including Model
+  - `/config/` - Application configuration
+  - `/logging/` - Game session logging
+  - `/options/` - User options management
+  - `/palette/` - Color theme definitions
+  - `/rules/` - Game rule definitions
+  - `/ui/` - UI components
+- `/test/` - Test files
+- `ARCHITECTURE.MD` - Architecture documentation
+- `CONTRIBUTING.MD` - Contribution guidelines
+- `README.MD` - Project documentation
 
 ## Development Best Practices
 
@@ -47,11 +59,26 @@ You are an expert in Go, CLI applications, and MVU (Model-View-Update) architect
   - Unit test `Update()` logic against messages.
   - Snapshot or golden-test the `View()` output.
 
-## Observability (Optional for CLI apps)
+## Logging and Observability
 
-- Attach trace/span data to logs if tracing is included.
-- Emit structured logs (e.g., JSON) with context identifiers if logging is needed.
-- Consider metrics for startup time, render latency, or error counts.
+Hammerclock includes a built-in logging system that:
+
+- Records game events and player actions
+- Writes logs to a CSV file (`logs.csv`)
+- Uses a buffered channel for non-blocking logging
+- Supports both in-memory action logs (for UI display) and persistent logs (for post-game analysis)
+
+When adding new log entries:
+
+```go
+// Add a log entry for a specific player
+logging.AddLogEntry(player, model, "Player %s completed phase %s", player.Name, phaseName)
+```
+
+For application observability:
+
+- Consider adding metrics for startup time, render latency, or error counts
+- Structured logging would be a useful future enhancement
 
 ## Tooling
 
@@ -78,8 +105,8 @@ You are an expert in Go, CLI applications, and MVU (Model-View-Update) architect
 
 ### Prerequisites
 
-- Go 1.23.0 or later (project uses toolchain 1.24.1)
-- The tview library for terminal UI
+- Go 1.18.0 or later
+- The tview library for terminal UI (already included in go.mod)
 
 ### Building the Application
 
@@ -87,14 +114,14 @@ You are an expert in Go, CLI applications, and MVU (Model-View-Update) architect
 2. Navigate to the project root directory
 3. Build the application using:
 
-   ``` zsh
-   go build -o hammerclock.exe cmd/app/main.go
+   ```powershell
+   go build -o bin/hammerclock.exe cmd/hammerclock/main.go
    ```
 
 4. Run the application:
 
-   ``` zsh
-   ./hammerclock.exe
+   ```powershell
+   ./bin/hammerclock.exe
    ```
 
 ### Live build and reload
@@ -103,13 +130,26 @@ For live reload during development, use the `air` tool:
 
 1. Install `air`:
 
-   ``` zsh
+   ```powershell
    go install github.com/cosmtrek/air@latest
    ```
 
-2. Run `air` in the project root directory:
+2. Create a `.air.toml` configuration file in the project root:
 
-   ``` zsh
+   ```toml
+   root = "."
+   tmp_dir = "tmp"
+
+   [build]
+   cmd = "go build -o ./tmp/main.exe ./cmd/hammerclock"
+   bin = "tmp/main.exe"
+   include_ext = ["go", "json"]
+   exclude_dir = ["vendor", "bin"]
+   ```
+
+3. Run `air` in the project root directory:
+
+   ```powershell
    air
    ```
 
@@ -117,21 +157,109 @@ For live reload during development, use the `air` tool:
 
 The application uses the tview library for terminal UI. Key aspects:
 
-- Screen initialization and cleanup in the main function
-- Event handling loop for keyboard input
+- Screen initialization and cleanup in the main function (`cmd/hammerclock/main.go`)
+- Event handling through the message system (`internal/hammerclock/update.go`)
 - Time tracking using Go's ticker functionality
+- UI components organized in `internal/hammerclock/ui/`
+
+### Message System
+
+When creating new message types:
+
+1. Define the message struct in `internal/hammerclock/common/messages.go`
+2. Add a handler in the `Update` function in `internal/hammerclock/update.go`
+3. Implement the handler function following the MVU pattern
+
+Example:
+
+```go
+// In messages.go
+type NewFeatureMsg struct {
+    Parameter string
+}
+
+// In update.go
+func Update(msg common.Message, model common.Model) (common.Model, Command) {
+    switch msg := msg.(type) {
+    // ...existing message handlers...
+    case *common.NewFeatureMsg:
+        return handleNewFeature(msg, model)
+    }
+}
+
+func handleNewFeature(msg *common.NewFeatureMsg, model common.Model) (common.Model, Command) {
+    newModel := model // Create a copy
+    // Update model based on message
+    return newModel, noCommand
+}
+```
 
 ### Adding New Features
 
 When adding new features:
 
-1. For UI changes, modify the relevant drawing functions
-2. For game logic, update the event handling in the main loop
-3. For configuration changes, update the Settings struct and JSON handling
+1. For UI changes:
+   - Add new components in the `ui` directory
+   - Update the view rendering in `view.go`
+2. For game logic:
+   - Define new message types
+   - Implement handlers in `update.go`
+   - Update the model as needed
+3. For configuration changes:
+   - Update structures in `options/options.go`
+   - Ensure backward compatibility with existing config files
 4. Add appropriate tests for the new functionality
 
 ### Debugging
 
-- Use `fmt.Println()` for debug output (will appear in the terminal)
-- Consider adding a debug mode flag for verbose logging
+- Use the logging system for debug output (`internal/hammerclock/logging/logging.go`)
+- Add log entries to track state changes and user actions
+- Use `fmt.Printf()` for temporary debug output during development
 - Test UI changes incrementally to avoid breaking the interface
+
+## UI Components
+
+Hammerclock uses several UI components organized in the `/internal/hammerclock/ui/` directory:
+
+| Component    | Purpose                            | File              |
+| ------------ | ---------------------------------- | ----------------- |
+| AboutPanel   | Displays application information   | `AboutPanel.go`   |
+| Clock        | Displays and manages time tracking | `clock.go`        |
+| LogPanel     | Shows player action logs           | `LogPanel.go`     |
+| MenuBar      | Provides navigation controls       | `MenuBar.go`      |
+| OptionsPanel | Manages game settings              | `OptionsPanel.go` |
+| PlayerPanel  | Displays player information        | `PlayerPanel.go`  |
+| StatusPanel  | Shows game status                  | `StatusPanel.go`  |
+
+When creating or modifying UI components:
+
+1. Follow the existing component patterns
+2. Keep drawing logic separate from state management
+3. Update the View's Render method to use your component
+
+## Color Palettes
+
+Hammerclock supports multiple color palettes, defined in `internal/hammerclock/palette/palette.go`:
+
+- `k9s`: Default color scheme based on the K9s terminal UI application
+- `dracula`: Dark theme with purple accents
+- `monokai`: Dark theme with vibrant colors
+- `warhammer`: Theme inspired by Warhammer 40K colors
+- `killteam`: Theme inspired by Kill Team colors
+
+When adding a new color palette:
+
+1. Define a new ColorPalette struct in the palette package
+2. Add the palette name to the `ColorPalettes()` function
+3. Add a case for your palette in the `ColorPaletteByName()` function
+
+## Future Improvements
+
+- Introduce more granular message types for specific state changes
+- Implement deeper immutability for nested state objects
+- Add comprehensive test coverage with unit and integration tests
+- Enhance logging with filtering and search capabilities
+- Support for exporting logs in multiple formats
+- Add custom timers and time limits for competitive play
+- Implement network play support for remote players
+- Create a headless mode for tournament use

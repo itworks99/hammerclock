@@ -17,7 +17,7 @@ import (
 // CLI usage information
 var cliUsage = `
 Hammerclock ` + hammerclockConfig.Version + `
-Terminal-based timer and phase tracker for tabletop games
+Terminal-based chess clock and tracker for tabletop games
 
 Usage:
   hammerclock [options]

@@ -7,7 +7,6 @@ import (
 	"github.com/rivo/tview"
 	"hammerclock/internal/hammerclock/common"
 	"hammerclock/internal/hammerclock/logging"
-	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/rules"
 )
@@ -65,8 +64,6 @@ func Update(msg common.Message, model common.Model) (common.Model, Command) {
 	case *common.SetEnableLogMsg:
 		newModel := model
 		newModel.Options.LoggingEnabled = msg.Value
-		// Persist options to disk
-		_ = options.SaveOptions(newModel.Options, "", true)
 		return newModel, noCommand
 	default:
 		return model, noCommand

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"hammerclock/internal/hammerclock/config"
 	"hammerclock/internal/hammerclock/rules"
@@ -24,7 +25,8 @@ type Options struct {
 func defaultPlayerNames() []string {
 	var playerNames []string
 	for i := range hammerclockConfig.DefaultPlayerCount {
-		playerNames = append(playerNames, hammerclockConfig.DefaultPlayerPrefix+" "+string(rune(i+1)))
+		playerCount := strconv.Itoa(i + 1)
+		playerNames = append(playerNames, hammerclockConfig.DefaultPlayerPrefix+" "+string(playerCount))
 	}
 	return playerNames
 }

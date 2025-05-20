@@ -25,4 +25,4 @@ const DefaultLogDateTimeFormat = "2006-01-02 15:04:05"
 const DefaultLogFileName = "logs.csv"
 
 // DefaultLogFilePath is the default path for the log file
-const DefaultLogFilePath = "./" + DefaultLogFileName
+const DefaultLogFilePath = ""

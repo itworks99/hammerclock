@@ -4,10 +4,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rivo/tview"
 	"hammerclock/internal/hammerclock/common"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/ui"
+
+	"github.com/rivo/tview"
 )
 
 // View represents the main UI structure of the application.
@@ -224,6 +225,26 @@ func CreateEndGameConfirmationModal(view *View) *tview.Modal {
 	// Style the modal
 	modal.SetBorder(true)
 	modal.SetTitle(" Confirm End Game ")
+
+	return modal
+}
+
+// CreateExitConfirmationModal creates a modal dialog asking for confirmation to exit the application
+func CreateExitConfirmationModal(view *View) *tview.Modal {
+	modal := tview.NewModal().
+		SetText("Are you sure you want to exit?").
+		AddButtons([]string{"Yes", "No"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonIndex == 0 { // "Yes" is the first button (index 0)
+				view.MessageChan <- &common.ExitConfirmMsg{Confirmed: true}
+			} else {
+				view.MessageChan <- &common.ExitConfirmMsg{Confirmed: false}
+			}
+		})
+
+	// Style the modal
+	modal.SetBorder(true)
+	modal.SetTitle(" Confirm Exit ")
 
 	return modal
 }

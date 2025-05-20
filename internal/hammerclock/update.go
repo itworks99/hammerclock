@@ -3,12 +3,13 @@ package hammerclock
 import (
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"hammerclock/internal/hammerclock/common"
 	"hammerclock/internal/hammerclock/logging"
 	"hammerclock/internal/hammerclock/palette"
 	"hammerclock/internal/hammerclock/rules"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 // Command represents a Command that can be executed after an update
@@ -30,6 +31,10 @@ func Update(msg common.Message, model common.Model) (common.Model, Command) {
 		return handleEndGameConfirm(msg, model)
 	case *common.ShowEndGameConfirmMsg:
 		return handleShowEndGameConfirm(model)
+	case *common.ExitConfirmMsg:
+		return handleExitConfirm(msg, model)
+	case *common.ShowExitConfirmMsg:
+		return handleShowExitConfirm(model)
 	case *common.SwitchTurnsMsg:
 		return handleSwitchTurns(model)
 	case *common.NextPhaseMsg:
@@ -172,6 +177,15 @@ func handleShowEndGameConfirm(model common.Model) (common.Model, Command) {
 	return model, func() common.Message {
 		// This will be handled by the main.go to show the dialog
 		return &common.ShowModalMsg{Type: "EndGameConfirm"}
+	}
+}
+
+// handleShowExitConfirm handles the showExitConfirmMsg
+func handleShowExitConfirm(model common.Model) (common.Model, Command) {
+	// Return the model unchanged and a command that will show the confirmation dialog
+	return model, func() common.Message {
+		// This will be handled by the main.go to show the dialog
+		return &common.ShowModalMsg{Type: "ExitConfirm"}
 	}
 }
 
@@ -388,9 +402,8 @@ func handleKeyPress(msg *common.KeyPressMsg, model common.Model) (common.Model, 
 			// Previous phase
 			return handlePrevPhase(model)
 		case "q", "Q":
-			// Quit the application
-			// This will be handled in the main function
-			return model, noCommand
+			// Show the exit confirmation dialog instead of directly quitting
+			return handleShowExitConfirm(model)
 		case " ":
 			// Switch turns
 			return handleSwitchTurns(model)
@@ -488,4 +501,24 @@ func handleSetOneTurnForAllPlayers(msg *common.SetOneTurnForAllPlayersMsg, model
 	newRules[newModel.Options.Default] = newRule
 	newModel.Options.Rules = newRules
 	return newModel, noCommand
+}
+
+// handleExitConfirm handles the exitConfirmMsg
+func handleExitConfirm(msg *common.ExitConfirmMsg, model common.Model) (common.Model, Command) {
+	// Create a command that will restore the main UI after handling the confirmation
+	restoreUICmd := func() common.Message {
+		return &common.ShowMainScreenMsg{}
+	}
+
+	// If user confirmed exiting, terminate the application
+	if msg.Confirmed {
+		// Use a special command to communicate that the application should exit
+		exitCmd := func() common.Message {
+			return &common.ExitConfirmMsg{Confirmed: true}
+		}
+		return model, exitCmd
+	}
+
+	// If user canceled, just restore the UI
+	return model, restoreUICmd
 }

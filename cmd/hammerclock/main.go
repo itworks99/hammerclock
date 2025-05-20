@@ -8,7 +8,7 @@ import (
 
 	"hammerclock/internal/hammerclock"
 	"hammerclock/internal/hammerclock/common"
-	"hammerclock/internal/hammerclock/config"
+	hammerclockConfig "hammerclock/internal/hammerclock/config"
 	"hammerclock/internal/hammerclock/logging"
 	"hammerclock/internal/hammerclock/options"
 	"hammerclock/internal/hammerclock/palette"
@@ -99,8 +99,6 @@ func main() {
 				updatedModel, cmd := hammerclock.Update(msg, model)
 				model = updatedModel
 
-				_ = options.SaveOptions(model.Options, "", true)
-
 				view.App.QueueUpdateDraw(func() {
 					view.Render(&model)
 				})
@@ -114,12 +112,18 @@ func main() {
 									case "EndGameConfirm":
 										modal := hammerclock.CreateEndGameConfirmationModal(view)
 										hammerclock.ShowConfirmationModal(view, modal)
+									case "ExitConfirm":
+										modal := hammerclock.CreateExitConfirmationModal(view)
+										hammerclock.ShowConfirmationModal(view, modal)
 									}
 								})
 							} else if _, ok := resultMsg.(*common.RestoreMainUIMsg); ok {
 								view.App.QueueUpdateDraw(func() {
 									view.RestoreMainView()
 								})
+							} else if exitMsg, ok := resultMsg.(*common.ExitConfirmMsg); ok && exitMsg.Confirmed {
+								// User confirmed exit, stop the application
+								view.App.Stop()
 							} else {
 								msgChan <- resultMsg
 							}

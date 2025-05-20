@@ -34,6 +34,14 @@ type EndGameConfirmMsg struct {
 // ShowEndGameConfirmMsg is sent to show the end game confirmation dialog
 type ShowEndGameConfirmMsg struct{}
 
+// ShowExitConfirmMsg is sent to show the exit confirmation dialog
+type ShowExitConfirmMsg struct{}
+
+// ExitConfirmMsg is sent when the user confirms or cancels exiting the application
+type ExitConfirmMsg struct {
+	Confirmed bool
+}
+
 // ShowModalMsg is sent to show a modal dialog
 type ShowModalMsg struct {
 	Type string

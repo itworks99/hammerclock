@@ -2,7 +2,7 @@ module hammerclock
 
 go 1.24.0
 
-toolchain go1.24.1
+toolchain go1.24
 
 require (
 	github.com/gdamore/tcell/v2 v2.8.1

@@ -21,6 +21,9 @@ jobs:
       - name: Tidy
         run: go mod tidy
 
+      - name: Test
+        run: go test -v ./...
+
       - name: Build for Windows
         env:
           GOOS: windows
@@ -37,16 +40,13 @@ jobs:
         env:
           GOOS: darwin
           GOARCH: amd64
-        run: go build -v -o hammerclock cmd/hammerclock/main.go
+        run: go build -v -o hammerclock-darwin-amd64 cmd/hammerclock/main.go
 
       - name: Build for Apple Silicon Mac
         env:
           GOOS: darwin
           GOARCH: arm64
-        run: go build -v -o hammerclock cmd/hammerclock/main.go
-
-      - name: Test
-        run: go test -v ./...
+        run: go build -v -o hammerclock-darwin-arm64 cmd/hammerclock/main.go
 
       - name: Publish built artifacts
         uses: actions/upload-artifact@v4

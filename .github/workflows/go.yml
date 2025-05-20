@@ -29,3 +29,9 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Publish built artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: hammerclock
+

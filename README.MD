@@ -2,21 +2,20 @@
 
 A terminal-based UI (TUI) [chess clock](https://en.wikipedia.org/wiki/Chess_clock) and phase tracker application for tabletop games. It is designed with Warhammer 40K, Age of Sigmar, and other tabletop war games in mind, but can be used for any game that requires a timer and phase tracking.
 
+## Features
+- Support for multiple players with customizable player names
+- Tracks and manages turns, game phases, total elapsed time and individual time for each player
+- Bundled predefined rulesets, customizable game rules and phases
+- Logging for game sessions
+
 <img alt="Hammerclock Screenshot" src="img.png" width="600"/>
 
-## Features
-
-- Support for multiple players with customizable player names
-- Track total elapsed time and individual time for each player
-- Track and manage game phases for each player
-- Bundled predefined rulesets
-- Customizable game rules and phases
-- Multiple color palettes
-- Logging for game sessions
+####
+<img alt="Hammerclock Screenshot" src="img_1.png" width="600"/>
 
 ## Installation
 
-Download the latest release from the [GitHub repository](https://github.com/itworks99/hammerclock).
+Download the latest release from the [GitHub repository](https://github.com/itworks99/hammerclock/releases).
 
 ## Running
 

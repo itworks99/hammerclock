@@ -80,11 +80,10 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				if model.GameStarted {
-					view.App.QueueUpdateDraw(func() {
-						view.UpdateClock(&model)
-					})
-				}
+				// Always update the clock, regardless of game state
+				view.App.QueueUpdateDraw(func() {
+					view.UpdateClock(&model)
+				})
 				msgChan <- &common.TickMsg{}
 			case <-done:
 				return

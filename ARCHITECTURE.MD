@@ -22,9 +22,9 @@ type Model struct {
     // Game state
     Players             []*Player
     Phases              []string
-    GameStatus          GameStatus
+    GameStatus          GameStatus // Current game status, in progress, paused etc.
     CurrentScreen       string // Can be "main", "options", or "about"
-    GameStarted         bool
+    GameStarted         bool // Indicates if the game has started
     Options             options.Options
     CurrentColorPalette palette.ColorPalette
     TotalGameTime       time.Duration // Total elapsed time for the entire game
@@ -178,7 +178,7 @@ func handleSetRuleset(msg *common.SetRulesetMsg, model common.Model) (common.Mod
 The Hammerclock project follows a modular directory structure:
 
 | Directory                      | Purpose                   |
-| ------------------------------ | ------------------------- |
+|--------------------------------|---------------------------|
 | `cmd/hammerclock`              | Application entry point   |
 | `internal/hammerclock`         | Core application logic    |
 | `internal/hammerclock/common`  | Shared types and messages |
@@ -235,11 +235,10 @@ flowchart TB
 
 This buffered logging approach allows the application to record detailed game events without blocking the main UI thread, ensuring smooth performance even with frequent log entries.
 
-## Future Improvements
+## Potential future Improvements
 
 - Introduce more granular message types for specific state changes
 - Implement deeper immutability for nested state objects
-- Create a message dispatcher for more complex workflows
-- Add comprehensive test coverage with unit and integration tests
-- Enhance logging with filtering and search capabilities
 - Support for exporting logs in multiple formats
+- Add descriptions into the ruleset and every phase, displaying them in the UI
+- Add game logos into the rulesets

@@ -2,24 +2,6 @@
 
 Thank you for your interest in contributing to hammerclock! This document provides guidelines and instructions for contributing to this project.
 
-## Table of Contents
-
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Setting Up the Development Environment](#setting-up-the-development-environment)
-- [Project Structure](#project-structure)
-- [Development Workflow](#development-workflow)
-  - [Branching Strategy](#branching-strategy)
-  - [Commits](#commits)
-  - [Pull Requests](#pull-requests)
-- [Coding Guidelines](#coding-guidelines)
-  - [Architecture](#architecture)
-  - [Style Guide](#style-guide)
-  - [Documentation](#documentation)
-- [Testing](#testing)
-- [Building and Running](#building-and-running)
-
 ## Code of Conduct
 
 Please be respectful and considerate of others when contributing to this project. We aim to foster an inclusive and welcoming environment for everyone.
@@ -36,26 +18,26 @@ Please be respectful and considerate of others when contributing to this project
 1. Fork the repository on GitHub
 2. Clone your fork locally:
 
-   ```powershell
+   ```
    git clone https://github.com/your-username/hammerclock.git
    cd hammerclock
    ```
 
 3. Add the original repository as an upstream remote:
 
-   ```powershell
+   ```
    git remote add upstream https://github.com/itworks99/hammerclock.git
    ```
 
 4. Install dependencies:
 
-   ```powershell
+   ```
    go mod download
    ```
 
 5. Build the project:
 
-   ```powershell
+   ```
    go build -o bin/hammerclock.exe cmd/hammerclock/main.go
    ```
 
@@ -104,13 +86,7 @@ See [ARCHITECTURE.MD](ARCHITECTURE.MD) for more details about the application de
 
 ### Architecture
 
-Hammerclock follows the Model-View-Update (MVU) architecture pattern:
-
-1. **Model**: Represents the application state (defined in `common/types.go`)
-2. **View**: Renders UI based on the model (implemented in `view.go`)
-3. **Update**: Handles messages and updates the model (implemented in `update.go`)
-
-All state changes must go through the Update function, which receives messages and returns a new model and optional commands.
+See [ARCHITECTURE.MD](ARCHITECTURE.MD) for more details about the application design.
 
 ### Style Guide
 
@@ -132,13 +108,13 @@ All state changes must go through the Update function, which receives messages a
 - Write tests for new features and bug fixes
 - Run tests before creating pull requests:
 
-  ```powershell
+  ```
   go test ./...
   ```
 
 - Make sure deadlock tests pass:
 
-  ```powershell
+  ```
   go test -v ./test/
   ```
 
@@ -146,7 +122,7 @@ All state changes must go through the Update function, which receives messages a
 
 To build and run the application:
 
-```powershell
+```
 go build -o bin/hammerclock.exe cmd/hammerclock/main.go
 ./bin/hammerclock.exe
 ```
@@ -155,7 +131,7 @@ For development with live reloading, you can use the `air` tool:
 
 1. Install air:
 
-   ```powershell
+   ```
    go install github.com/cosmtrek/air@latest
    ```
 
@@ -174,7 +150,7 @@ For development with live reloading, you can use the `air` tool:
 
 3. Run air:
 
-   ```powershell
+   ```
    air
    ```
 

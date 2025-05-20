@@ -1,6 +1,6 @@
 # Hammerclock v0.1
 
-A terminal-based UI (TUI) [chess clock](https://en.wikipedia.org/wiki/Chess_clock) and phase tracker application for tabletop games. It is designed with Warhammer 40K, Age of Sigmar, and other tabletop wargames in mind, but can be used for any game that requires a timer and phase tracking.
+A terminal-based UI (TUI) [chess clock](https://en.wikipedia.org/wiki/Chess_clock) and phase tracker application for tabletop games. It is designed with Warhammer 40K, Age of Sigmar, and other tabletop war games in mind, but can be used for any game that requires a timer and phase tracking.
 
 <img alt="Hammerclock Screenshot" src="img.png" width="600"/>
 
@@ -34,7 +34,7 @@ The application uses a JSON configuration file (default: `default.json`) to defi
 ```json
 {
   "default": 0,
-  "rules": [ ... ],
+  "rules": [ {} ],
   "playerCount": 2,
   "playerNames": [
     "Player 1",
@@ -46,10 +46,10 @@ The application uses a JSON configuration file (default: `default.json`) to defi
 }
 ```
 
-### General Configuration Options:
+### General Configuration Options
 
 | Option           | Description                         | Values                                               |
-| ---------------- | ----------------------------------- | ---------------------------------------------------- |
+|------------------|-------------------------------------|------------------------------------------------------|
 | `default`        | Index of the default ruleset to use | Integer (index in the rules array)                   |
 | `playerCount`    | The number of players in the game   | Integer                                              |
 | `playerNames`    | The names of the players            | Array of strings (must match `playerCount`)          |
@@ -85,10 +85,10 @@ The `rules` section in the configuration file defines the different game ruleset
 }
 ```
 
-### Rule Configuration Options:
+### Rule Configuration Options
 
 | Option                 | Description                                 | Values                                          |
-| ---------------------- | ------------------------------------------- | ----------------------------------------------- |
+|------------------------|---------------------------------------------|-------------------------------------------------|
 | `name`                 | The name of the game ruleset                | String                                          |
 | `phases`               | List of game phases specific to the ruleset | Array of strings                                |
 | `oneTurnForAllPlayers` | Whether all players take one turn together  | `true` or `false` (useful for games like Chess) |

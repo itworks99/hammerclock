@@ -77,7 +77,7 @@ func Update(msg common.Message, model common.Model) (common.Model, Command) {
 
 // handleStartGame handles the startGameMsg
 func handleStartGame(model common.Model) (common.Model, Command) {
-	// CreateAboutPanel a copy of the model to avoid modifying the original
+	// Create a copy of the model to avoid modifying the original
 	newModel := model
 
 	// Toggle between start and pause
@@ -106,8 +106,27 @@ func handleStartGame(model common.Model) (common.Model, Command) {
 		newModel.GameStatus = gameInProgress
 		newModel.GameStarted = true
 
+		// Check if any player has IsTurn set to true (a panel is focused)
+		anyPlayerSelected := false
+		for _, player := range newModel.Players {
+			if player.IsTurn {
+				anyPlayerSelected = true
+				break
+			}
+		}
+
+		// If no player is selected, use the first player
+		if !anyPlayerSelected && len(newModel.Players) > 0 {
+			// Reset all players to not be their turn
+			for i := range newModel.Players {
+				newModel.Players[i].IsTurn = false
+			}
+			// Set the first player to be their turn
+			newModel.Players[0].IsTurn = true
+		}
+
 		// Log action for active player(s)
-		for i, player := range model.Players {
+		for i, player := range newModel.Players {
 			if player.IsTurn {
 				logging.AddLogEntry(newModel.Players[i], &newModel, "Game started")
 			}

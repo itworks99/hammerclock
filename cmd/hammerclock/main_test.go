@@ -17,10 +17,10 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// TestMain is a basic integration test for the main function
+// TestMainIntegration is a basic integration test for the main function
 // Since main() is difficult to fully test due to UI dependencies,
 // we'll use a short timeout to just verify it starts without panic
-func TestMain(t *testing.T) {
+func TestMainIntegration(t *testing.T) {
 	// Skip in CI environments or when running all tests
 	if os.Getenv("CI") != "" || testing.Short() {
 		t.Skip("Skipping main test in CI environment")
@@ -110,6 +110,7 @@ func TestUsageOutput(t *testing.T) {
 	flag.Usage()
 
 	// Restore stderr
+	//goland:noinspection GoUnhandledErrorResult
 	w.Close()
 	os.Stderr = oldStderr
 
@@ -437,7 +438,7 @@ func TestInvalidMessages(t *testing.T) {
 	}
 
 	// Try an invalid player count
-	updatedModel, cmd = hammerclock.Update(&common.SetPlayerCountMsg{Count: -1}, model)
+	updatedModel, _ = hammerclock.Update(&common.SetPlayerCountMsg{Count: -1}, model)
 
 	// Model should be unchanged
 	if updatedModel.Options.PlayerCount != model.Options.PlayerCount {

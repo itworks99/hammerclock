@@ -123,8 +123,8 @@ See [ARCHITECTURE.MD](ARCHITECTURE.MD) for more details about the application de
 To build and run the application:
 
 ```
-go build -o bin/hammerclock.exe cmd/hammerclock/main.go
-./bin/hammerclock.exe
+go build -o hammerclock.exe cmd/hammerclock/main.go
+./hammerclock.exe
 ```
 
 For development with live reloading, you can use the `air` tool:

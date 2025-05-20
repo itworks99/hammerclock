@@ -11,7 +11,7 @@ func main() {
 	fmt.Println("Starting hammerclock test...")
 
 	// Start the application process
-	cmd := exec.Command("bin/hammerclock.exe")
+	cmd := exec.Command("../hammerclock.exe")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

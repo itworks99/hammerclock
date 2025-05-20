@@ -21,8 +21,10 @@ jobs:
       - name: Tidy
         run: go mod tidy
 
-      - name: Test
-        run: go test -v ./...
+      - name: Build and Test
+        run: |
+          go build -v -o hammerclock cmd/hammerclock/main.go
+          go test -v ./...
 
       - name: Build for Windows
         env:

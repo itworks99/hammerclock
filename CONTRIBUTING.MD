@@ -1,6 +1,6 @@
 # Contributing to hammerclock
 
-Thank you for your interest in contributing to hammerclock! This document provides guidelines and instructions for contributing to this project.
+This document provides guidelines and instructions for contributing to this project.
 
 ## Code of Conduct
 
@@ -10,7 +10,7 @@ Please be respectful and considerate of others when contributing to this project
 
 ### Prerequisites
 
-- Go 1.18 or later
+- Go 1.24 or later
 - Git
 
 ### Setting Up the Development Environment

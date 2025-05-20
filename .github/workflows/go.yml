@@ -50,8 +50,26 @@ jobs:
           GOARCH: arm64
         run: go build -v -o hammerclock-darwin-arm64 cmd/hammerclock/main.go
 
-      - name: Publish built artifacts
+      - name: Publish Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hammerclock
-          path: ./
+          name: hammerclock-windows-amd64
+          path: ./hammerclock.exe
+
+      - name: Publish Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hammerclock-linux-amd64
+          path: ./hammerclock
+
+      - name: Publish Intel Mac artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hammerclock-darwin-amd64
+          path: ./hammerclock-darwin-amd64
+
+      - name: Publish Apple Silicon Mac artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hammerclock-darwin-arm64
+          path: ./hammerclock-darwin-arm64

@@ -1,4 +1,4 @@
-# Hammerclock v0.1
+# Hammerclock
 
 A terminal-based UI (TUI) [chess clock](https://en.wikipedia.org/wiki/Chess_clock) and phase tracker application for tabletop games. It is designed with Warhammer 40K, Age of Sigmar, and other tabletop war games in mind, but can be used for any game that requires a timer and phase tracking.
 

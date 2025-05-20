@@ -23,7 +23,7 @@ jobs:
 
       - name: Build and Test
         run: |
-          go build -v -o hammerclock cmd/hammerclock/main.go
+          go build -v -o hammerclock.exe cmd/hammerclock/main.go
           go test -v ./...
 
       - name: Build for Windows
